@@ -206,14 +206,14 @@ SensorScaling_752_480_30fps (
 	   0x086F frame period is d2159 lines,
 	   with a 15.4us line period = 0.0333s frame period (30 fps)
 	 */
-	SensorWriteConfirm2B (SENSOR_ADDR_WR, REG_T_FRAME_PERIOD, 0x08, 0x6F, CONFIRM_TRIES);
+	SensorWrite2B (SENSOR_ADDR_WR, REG_T_FRAME_PERIOD, 0x08, 0x6F);
 
 	/*
 	   ROI1 int time
 	   0x086E = d2158 Int time in number of lines. time for 1 line = 15.4us*57MHz/(CLK_CTRL in MHz)
 	   2158 lines at 57MHz clock should get us 30FPS
 	 */
-	SensorWriteConfirm2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, 0x08, 0x6E, CONFIRM_TRIES);
+	SensorWrite2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, 0x08, 0x6E);
 }
 
 /*
