@@ -125,7 +125,7 @@ SensorStop (
     uint8_t buf[2];
     SensorRead2B (SENSOR_ADDR_RD, REG_CTRL_CFG, buf);
     SensorWrite2B (SENSOR_ADDR_WR, REG_CTRL_CFG, buf[0], buf[1] | 0x01);
-    SensorWrite (SENSOR_ADDR_WR, ABORT_MBX, 1, buf[0]); // Any write will trigger an abort
+    SensorWrite (SENSOR_ADDR_WR, ABORT_MBX, 1, buf); // Any write will trigger an abort
 }
 
 /*
