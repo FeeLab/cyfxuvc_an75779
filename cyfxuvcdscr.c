@@ -298,7 +298,6 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x01,                           /* Size of controls field : 1 byte */
         0x00,                           /* D2 : Compression quality supported */
 
-
        /* Class specific Uncompressed VS format descriptor */
         0x1B,                           /* Descriptor size */
         0x24,                           /* Class-specific VS I/f Type */
@@ -312,14 +311,12 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x10,                           /* Number of bits per pixel used to specify color in the decoded video frame.
                                            0 if not applicable: 10 bit per pixel */
         0x01,                           /* Optimum Frame Index for this stream: 1 */
-        0x08,                           /* X dimension of the picture aspect ratio: Non-interlaced in
-			        	   progressive scan */
-        0x06,                           /* Y dimension of the picture aspect ratio: Non-interlaced in
-					   progressive scan*/
+        0x2F,                           /* X dimension of the picture aspect ratio: Non-interlaced in
+			        	   progressive scan; Changed by GL */
+        0x1E,                           /* Y dimension of the picture aspect ratio: Non-interlaced in
+					   progressive scan; Changed by GL*/
         0x00,                           /* Interlace Flags: Progressive scanning, no interlace */
         0x00,                           /* duplication of the video stream restriction: 0 - no restriction */
-
-
 
        /* Class specific Uncompressed VS Frame descriptor */
         0x1E,                           /* Descriptor size */
@@ -327,14 +324,14 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x05,                           /* Subtype: uncompressed frame I/F */
         0x01,                           /* Frame Descriptor Index */
         0x03,                           /* Still image capture method 1 supported, fixed frame rate */
-        0x80,0x02,                      /* Width in pixel: 320-QVGA */
-        0xE0,0x01,                      /* Height in pixel 240-QVGA */
-        0x00,0x50,0x97,0x31,            /* Min bit rate bits/s. Not specified, taken from MJPEG */
-        0x00,0x50,0x97,0x31,            /* Max bit rate bits/s. Not specified, taken from MJPEG */
-        0x00,0x60,0x09,0x00,            /* Maximum video or still frame size in bytes(Deprecated) */
-        0x2A,0x2C,0x0A,0x00,            /* Default Frame Interval */
-        0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-        0x2A,0x2C,0x0A,0x00,            /* Shortest Frame Interval */
+        0xF0, 0x02,                     /* Width in pixel; Changed by GL */
+        0xE0, 0x01,                     /* Height in pixel; Changed by GL */
+        0x00,0xC0,0x53,0x0A,            /* Min bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
+        0x00,0xC0,0x53,0x0A,            /* Max bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
+        0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated) */
+        0x15, 0x16, 0x05, 0x00,         /* Default Frame Interval: 30 FPS */
+		0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
+		0x15, 0x16, 0x05, 0x00,         /* Shortest Frame Interval */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */
@@ -637,8 +634,8 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x00,0x38,0x9B,0x71,
         0x10,                           /* Number of bits per pixel */
         0x01,                           /* Optimum Frame Index for this stream: 1 */
-        0x10,                           /* X dimension of the picture aspect ratio; Non-interlaced */
-        0x09,                           /* Y dimension of the pictuer aspect ratio: Non-interlaced */
+        0x2F,                           /* X dimension of the picture aspect ratio; Non-interlaced; Changed by GL*/
+        0x1E,                           /* Y dimension of the pictuer aspect ratio: Non-interlaced; Changed by GL*/
         0x00,                           /* Interlace Flags: Progressive scanning, no interlace */
         0x00,                           /* duplication of the video stream restriction: 0 - no restriction */
 
@@ -648,14 +645,14 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x05,                           /* Subtype: uncompressed frame I/F */
         0x01,                           /* Frame Descriptor Index */
         0x03,                           /* Still image capture method 1 supported, fixed frame rate */
-        0x00, 0x05,                     /* Width in pixel */
-        0xD0, 0x02,                     /* Height in pixel */
-        0x00,0x50,0x97,0x31,            /* Min bit rate bits/s. */
-        0x00,0x50,0x97,0x31,            /* Max bit rate bits/s. */
-        0x00,0xA4,0x1F,0x00,            /* Maximum video or still frame size in bytes(Deprecated)*/
-        0x15, 0x16, 0x05, 0x00,         /* 30fps */
-        0x01,
-        0x15,0x16,0x05,0x00,
+        0xF0, 0x02,                     /* Width in pixel; Changed by GL */
+        0xE0, 0x01,                     /* Height in pixel; Changed by GL */
+        0x00,0xC0,0x53,0x0A,            /* Min bit rate bits/s; Changed by GL. */
+        0x00,0xC0,0x53,0x0A,            /* Max bit rate bits/s; Changed by GL. */
+        0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated); Changed by GL. */
+        0x15, 0x16, 0x05, 0x00,         /* Default Frame Interval: 30 FPS */
+        0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
+        0x15, 0x16, 0x05, 0x00,         /* Shortest Frame Interval */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */

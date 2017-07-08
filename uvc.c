@@ -67,6 +67,8 @@
 #include <cyu3socket.h>
 
 #include "uvc.h"
+#include "appi2c.h"
+#include "app_error_handler.h"
 #include "sensor.h"
 #include "camera_ptzcontrol.h"
 #include "cyfxgpif2config.h"
@@ -113,7 +115,7 @@ uint8_t glProbeCtrl[CY_FX_UVC_MAX_PROBE_SETTING] = {
     0x00, 0x00,                 /* Window size for average bit rate: only applicable to video
                                    streaming with adjustable compression parameters */
     0x00, 0x00,                 /* Internal video streaming i/f latency in ms */
-    0x00, 0x48, 0x3F, 0x00,     /* Max video frame size in bytes */
+    0x00, 0x04, 0x0B, 0x00,     /* Max video frame size in bytes; Changed by GL */
     0x00, 0x40, 0x00, 0x00      /* No. of bytes device can rx in single payload = 16 KB */
 };
 
@@ -122,7 +124,7 @@ uint8_t glProbeCtrl20[CY_FX_UVC_MAX_PROBE_SETTING] = {
     0x00, 0x00,                 /* bmHint : no hit */
     0x01,                       /* Use 1st Video format index */
     0x01,                       /* Use 1st Video frame index */
-    0x2A, 0x2C, 0x0A, 0x00,     /* Desired frame interval in the unit of 100ns: 15 fps */
+    0x15, 0x16, 0x05, 0x00,     /* Desired frame interval in the unit of 100ns: 30 fps */
     0x00, 0x00,                 /* Key frame rate in key frame/video frame units: only applicable
                                    to video streaming with adjustable compression parameters */
     0x00, 0x00,                 /* PFrame rate in PFrame / key frame units: only applicable to
@@ -132,7 +134,7 @@ uint8_t glProbeCtrl20[CY_FX_UVC_MAX_PROBE_SETTING] = {
     0x00, 0x00,                 /* Window size for average bit rate: only applicable to video
                                    streaming with adjustable compression parameters */
     0x00, 0x00,                 /* Internal video streaming i/f latency in ms */
-    0x00, 0x60, 0x09, 0x00,     /* Max video frame size in bytes */
+    0x00, 0x04, 0x0B, 0x00,     /* Max video frame size in bytes */
     0x00, 0x40, 0x00, 0x00      /* No. of bytes device can rx in single payload = 16 KB */
 };
 
@@ -171,27 +173,6 @@ CyFxUVCAddHeader (
     {
         buffer_p[1] |= CY_FX_UVC_HEADER_EOF;
         glUVCHeader[1] ^= CY_FX_UVC_HEADER_FRAME_ID;
-    }
-}
-
-
-/* Application Error Handler */
-void
-CyFxAppErrorHandler (
-        CyU3PReturnStatus_t apiRetStatus    /* API return status */
-        )
-{
-    /* This function is hit when we have hit a critical application error. This is not
-       expected to happen, and the current implementation of this function does nothing
-       except stay in a loop printing error messages through the UART port.
-
-       This function can be modified to take additional error handling actions such
-       as cycling the USB connection or performing a warm reset.
-     */
-    for (;;)
-    {
-        CyU3PDebugPrint (4, "Error handler...\r\n");
-        CyU3PThreadSleep (1000);
     }
 }
 
@@ -548,33 +529,7 @@ CyFxUVCApplnDebugInit (
     CyU3PDebugPreamble (CyFalse);
 }
 
-/* I2C initialization. */
-static void
-CyFxUVCApplnI2CInit (void)
-{
-    CyU3PI2cConfig_t i2cConfig;;
-    CyU3PReturnStatus_t status;
 
-    status = CyU3PI2cInit ();
-    if (status != CY_U3P_SUCCESS)
-    {
-        CyU3PDebugPrint (4, "I2C initialization failed!\n");
-        CyFxAppErrorHandler (status);
-    }
-
-    /*  Set I2C Configuration */
-    i2cConfig.bitRate    = 100000;      /*  100 KHz */
-    i2cConfig.isDma      = CyFalse;
-    i2cConfig.busTimeout = 0xffffffffU;
-    i2cConfig.dmaTimeout = 0xffff;
-
-    status = CyU3PI2cSetConfig (&i2cConfig, 0);
-    if (CY_U3P_SUCCESS != status)
-    {
-        CyU3PDebugPrint (4, "I2C configuration failed!\n");
-        CyFxAppErrorHandler (status);
-    }
-}
 
 #ifdef BACKFLOW_DETECT
 static void CyFxUvcAppPibCallback (
@@ -635,7 +590,6 @@ CyFxUVCApplnInit (void)
     CyU3PEpConfig_t              endPointConfig;
     CyU3PReturnStatus_t          apiRetStatus;
     CyU3PGpioClock_t             gpioClock;
-    CyU3PGpioSimpleConfig_t      gpioConfig;
     CyU3PPibClock_t              pibclock;
 
 #ifdef USB_DEBUG_INTERFACE
@@ -671,28 +625,6 @@ CyFxUVCApplnInit (void)
         CyFxAppErrorHandler (apiRetStatus);
     }
 
-    /* CTL pins are restricted and cannot be configured using I/O matrix configuration function,
-     * must use GpioOverride to configure it */
-    apiRetStatus = CyU3PDeviceGpioOverride (SENSOR_RESET_GPIO, CyTrue);
-    if (apiRetStatus != 0)
-    {
-        CyU3PDebugPrint (4, "GPIO Override failed, Error Code = %d\n", apiRetStatus);
-        CyFxAppErrorHandler (apiRetStatus);
-    }
-
-    /* SENSOR_RESET_GPIO is the Sensor reset pin */
-    gpioConfig.outValue    = CyTrue;
-    gpioConfig.driveLowEn  = CyTrue;
-    gpioConfig.driveHighEn = CyTrue;
-    gpioConfig.inputEn     = CyFalse;
-    gpioConfig.intrMode    = CY_U3P_GPIO_NO_INTR;
-    apiRetStatus           = CyU3PGpioSetSimpleConfig (SENSOR_RESET_GPIO, &gpioConfig);
-    if (apiRetStatus != CY_U3P_SUCCESS)
-    {
-        CyU3PDebugPrint (4, "GPIO Set Config Error, Error Code = %d\n", apiRetStatus);
-        CyFxAppErrorHandler (apiRetStatus);
-    }
-
     /* Initialize the P-port. */
     pibclock.clkDiv      = 2;
     pibclock.clkSrc      = CY_U3P_SYS_CLK;
@@ -719,7 +651,7 @@ CyFxUVCApplnInit (void)
 #endif
 
     /* Image sensor initialization. Reset and then initialize with appropriate configuration. */
-    CyU3PThreadSleep(100);
+    SensorConfigureSerdes ();
     SensorReset ();
     SensorInit ();
 
@@ -1339,11 +1271,12 @@ UVCHandleVideoStreamingRqts (
                     {
                         if (usbSpeed == CY_U3P_SUPER_SPEED)
                         {
-                            SensorScaling_HD720p_30fps ();
+                            SensorScaling_752_480_30fps ();
                         }
                         else
                         {
-                            SensorScaling_VGA ();
+                        	// FIXME: should the image be different over USB2.0?
+                        	SensorScaling_752_480_30fps ();
                         }
 
                         /* We can start streaming video now. */
