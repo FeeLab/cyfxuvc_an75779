@@ -39,20 +39,20 @@
 #include "sensor.h"
 #include "appi2c.h"
 
-#define CONFIRM_TRIES 5
+#define CONFIRM_TRIES      5
 
-// ATTiny20 registers
-#define REG_ATTINY_INIT 0xFF
+/* ATTiny20 registers */
+#define REG_ATTINY_INIT    0xFF
 
-// E2V registers
-#define SOFT_RESET 0x01
-#define ABORT_MBX 0x03
-#define REG_CTRL_CFG 0x0B // Has restricted registers!
+/* E2V registers */
+#define SOFT_RESET         0x01
+#define ABORT_MBX          0x03
+#define REG_CTRL_CFG       0x0B // Has restricted registers!
 #define REG_T_FRAME_PERIOD 0x0C
-#define ROI1_T_INT_LL 0x0E
-#define ROI1_GAIN 0x11
-#define FB_STATUS 0x3E
-#define CHIP_ID 0x7F
+#define ROI1_T_INT_LL      0x0E
+#define ROI1_GAIN          0x11
+#define FB_STATUS          0x3E
+#define CHIP_ID            0x7F
 
 static void Sensor_Configure_EV76C541 (void);
 static void SensorStart (void);
