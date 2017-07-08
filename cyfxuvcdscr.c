@@ -727,25 +727,29 @@ const uint8_t CyFxUSBStringLangIDDscr[] =
 /* Standard Manufacturer String Descriptor */
 const uint8_t CyFxUSBManufactureDscr[] =
     {
-        0x10,                           /* Descriptor Size */
+        0x0E,                           /* Descriptor Size */
         CY_U3P_USB_STRING_DESCR,        /* Device Descriptor Type */
-        'C',0x00,
-        'y',0x00,
-        'p',0x00,
-        'r',0x00,
+        'F',0x00,
         'e',0x00,
-        's',0x00,
-        's',0x00
+        'e',0x00,
+        'L',0x00,
+        'a',0x00,
+        'b',0x00
     };
 
 
 /* Standard Product String Descriptor */
 const uint8_t CyFxUSBProductDscr[] =
     {
-        0x08,                           /* Descriptor Size */
+        0x12,                           /* Descriptor Size */
         CY_U3P_USB_STRING_DESCR,        /* Device Descriptor Type */
         'F',0x00,
-        'X',0x00,
-        '3',0x00
+        'e',0x00,
+        'e',0x00,
+        'S',0x00,
+        'c',0x00,
+        'o',0x00,
+        'p',0x00,
+        'e',0x00
     };
 
