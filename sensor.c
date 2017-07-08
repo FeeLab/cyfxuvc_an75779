@@ -46,6 +46,7 @@
 
 // E2V registers
 #define SOFT_RESET 0x01
+#define ABORT_MBX 0x03
 #define REG_CTRL_CFG 0x0B // Has restricted registers!
 #define REG_T_FRAME_PERIOD 0x0C
 #define ROI1_T_INT_LL 0x0E
@@ -54,6 +55,8 @@
 #define CHIP_ID 0x7F
 
 static void Sensor_Configure_EV76C541 (void);
+static void SensorStart (void);
+static void SensorStop (void);
 
 /*
  * Reset the EV76C541 sensor using GPIO.
@@ -62,7 +65,7 @@ void
 SensorReset (
         void)
 {
-	uint8_t buf[1] = { 0x00 };
+    uint8_t buf[1] = { 0x00 };
     CyU3PReturnStatus_t apiRetStatus;
 
     /* Write to reset register to reset the sensor. */
@@ -102,6 +105,27 @@ SensorInit (
      * Using 752x480 at 30fps as default setting.
      */
     SensorScaling_752_480_30fps ();
+
+    SensorStart ();
+}
+
+static void
+SensorStart (
+             void)
+{
+    // Set control configuration to start running
+    // roi_video_en, roi_overlap_en, trig_rqst
+    SensorWriteConfirm2B (SENSOR_ADDR_WR, REG_CTRL_CFG, 0x00, 0x0E, CONFIRM_TRIES);
+}
+
+static void
+SensorStop (
+            void)
+{
+    uint8_t buf[2];
+    SensorRead2B (SENSOR_ADDR_RD, REG_CTRL_CFG, buf);
+    SensorWrite2B (SENSOR_ADDR_WR, REG_CTRL_CFG, buf[0], buf[1] | 0x01);
+    SensorWrite (SENSOR_ADDR_WR, ABORT_MBX, 1, buf[0]); // Any write will trigger an abort
 }
 
 /*
@@ -167,9 +191,6 @@ Sensor_Configure_EV76C541( void ) //SPI configuration of sensor
 {
     // Trigger attiny20 initialization of E2V... this will reset the E2V
     SensorWriteNoReg (SENSOR_ADDR_WR, REG_ATTINY_INIT);
-
-    // Set control configuration to start running
-    SensorWriteConfirm2B (SENSOR_ADDR_WR, REG_CTRL_CFG, 0x00, 0x0E, CONFIRM_TRIES); // roi_video_en, roi_overlap_en, trig_rqst
 }
 
 /*
