@@ -1,6 +1,6 @@
 /*
  * Project Name: fx3_uvc.cyfx
- * Time : 06/09/2015 13:48:38
+ * Time : 07/08/2017 18:42:36
  * Device Type: FX3
  * Project Type: GPIF2
  *
@@ -13,9 +13,8 @@
  * 
  */
 
-#ifndef _INCLUDED_CYFXGPIF2CONFIG_
-#define _INCLUDED_CYFXGPIF2CONFIG_
-
+#ifndef _INCLUDED__
+#define _INCLUDED__
 #include "cyu3types.h"
 #include "cyu3gpif.h"
 
@@ -108,9 +107,9 @@ uint32_t CyFxGpifRegValue[]  = {
     0x00000002,  /*  CY_U3P_PIB_GPIF_INTR_MASK */
     0x00000082,  /*  CY_U3P_PIB_GPIF_SERIAL_IN_CONFIG */
     0x00000782,  /*  CY_U3P_PIB_GPIF_SERIAL_OUT_CONFIG */
-    0x00000400,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_DIRECTION */
+    0x00000000,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_DIRECTION */
     0x0000E7FF,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_DEFAULT */
-    0x00000020,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_POLARITY */
+    0x00000000,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_POLARITY */
     0x00000000,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_TOGGLE */
     0x00000000,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_SELECT */
     0x00000000,  /*  CY_U3P_PIB_GPIF_CTRL_BUS_SELECT */
@@ -190,5 +189,4 @@ const CyU3PGpifConfig_t CyFxGpifConfig  = {
     CyFxGpifRegValue
 };
 
-#endif   /* _INCLUDED_CYFXGPIF2CONFIG_ */
-
+#endif   /* _INCLUDED__ */
