@@ -166,6 +166,9 @@ void
 SensorConfigureSerdes (void)
 {
 	uint8_t buf[2];
+	/* Boost low frequency gain */
+	buf[0] = 0xC0;
+	SensorWrite (DESER_ADDR_WR, DESER_LF_GAIN, 1, buf);
 
 	// Configure I2C passthrough for imaging sensor
 	buf[0] = SENSOR_ADDR_WR;
