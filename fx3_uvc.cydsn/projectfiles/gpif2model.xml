@@ -12,7 +12,7 @@
       <ClockSource>External</ClockSource>
       <ClockEdge>Positive</ClockEdge>
       <Endianness>LittleEndian</Endianness>
-      <DataBusWidth>Bit8</DataBusWidth>
+      <DataBusWidth>Bit16</DataBusWidth>
       <AddressBuswidth>0</AddressBuswidth>
     </InterfaceSetting>
   </InterfaceDefination>
@@ -64,7 +64,7 @@
       <Action ElementId="LD_DATA_COUNT0" ActionType="LD_DATA_COUNT">
         <CounterType>Up</CounterType>
         <CounterLoadValue>0</CounterLoadValue>
-        <CounterLimit>16367</CounterLimit>
+        <CounterLimit>8183</CounterLimit>
         <CounterReloadEnable>Disable</CounterReloadEnable>
         <CounterIncrement>1</CounterIncrement>
         <CounterInterrupt>Mask</CounterInterrupt>
@@ -72,7 +72,7 @@
       <Action ElementId="LD_ADDR_COUNT0" ActionType="LD_ADDR_COUNT">
         <CounterType>Up</CounterType>
         <CounterLoadValue>0</CounterLoadValue>
-        <CounterLimit>16367</CounterLimit>
+        <CounterLimit>8183</CounterLimit>
         <CounterReloadEnable>Disable</CounterReloadEnable>
         <CounterIncrement>1</CounterIncrement>
         <CounterInterrupt>Mask</CounterInterrupt>
@@ -85,7 +85,7 @@
       <Action ElementId="LD_DATA_COUNT0" ActionType="LD_DATA_COUNT">
         <CounterType>Up</CounterType>
         <CounterLoadValue>0</CounterLoadValue>
-        <CounterLimit>16367</CounterLimit>
+        <CounterLimit>8183</CounterLimit>
         <CounterReloadEnable>Disable</CounterReloadEnable>
         <CounterIncrement>1</CounterIncrement>
         <CounterInterrupt>Mask</CounterInterrupt>
@@ -93,7 +93,7 @@
       <Action ElementId="LD_ADDR_COUNT0" ActionType="LD_ADDR_COUNT">
         <CounterType>Up</CounterType>
         <CounterLoadValue>0</CounterLoadValue>
-        <CounterLimit>16367</CounterLimit>
+        <CounterLimit>8183</CounterLimit>
         <CounterReloadEnable>Disable</CounterReloadEnable>
         <CounterIncrement>1</CounterIncrement>
         <CounterInterrupt>Mask</CounterInterrupt>
@@ -113,7 +113,7 @@
       <Action ElementId="LD_ADDR_COUNT0" ActionType="LD_ADDR_COUNT">
         <CounterType>Up</CounterType>
         <CounterLoadValue>0</CounterLoadValue>
-        <CounterLimit>16367</CounterLimit>
+        <CounterLimit>8183</CounterLimit>
         <CounterReloadEnable>Disable</CounterReloadEnable>
         <CounterIncrement>1</CounterIncrement>
         <CounterInterrupt>Mask</CounterInterrupt>
@@ -133,7 +133,7 @@
       <Action ElementId="LD_DATA_COUNT0" ActionType="LD_DATA_COUNT">
         <CounterType>Up</CounterType>
         <CounterLoadValue>0</CounterLoadValue>
-        <CounterLimit>16367</CounterLimit>
+        <CounterLimit>8183</CounterLimit>
         <CounterReloadEnable>Disable</CounterReloadEnable>
         <CounterIncrement>1</CounterIncrement>
         <CounterInterrupt>Mask</CounterInterrupt>

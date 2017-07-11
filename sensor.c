@@ -54,6 +54,19 @@
 #define FB_STATUS          0x3E
 #define CHIP_ID            0x7F
 
+/* Deserializer registers */
+#define DESER_LF_GAIN      0x05
+#define SER_ALIAS          0x07
+#define SLAVE_ID_0         0x08
+#define SLAVE_ID_1         0x09
+#define SLAVE_ALIAS_0      0x10
+#define SLAVE_ALIAS_1      0x11
+#define DESER_GPIO_CONFIG  0x1D
+
+/* Serializer registers */
+#define SER_PWR_RESET	   0x01
+#define SER_GPO_CONFIG     0x0D
+
 static void Sensor_Configure_EV76C541 (void);
 static void SensorStart (void);
 static void SensorStop (void);
@@ -156,29 +169,29 @@ SensorConfigureSerdes (void)
 
 	// Configure I2C passthrough for imaging sensor
 	buf[0] = SENSOR_ADDR_WR;
-	SensorWrite (DESER_ADDR_WR, 0x08, 1, buf);
-	SensorWrite (DESER_ADDR_WR, 0x10, 1, buf);
+	SensorWrite (DESER_ADDR_WR, SLAVE_ID_0, 1, buf);
+	SensorWrite (DESER_ADDR_WR, SLAVE_ALIAS_0, 1, buf);
 
 	// Configure I2C passthrough for LED
 	buf[0] = LED_ADDR_WR;
-	SensorWrite (DESER_ADDR_WR, 0x09, 1, buf);
-	SensorWrite (DESER_ADDR_WR, 0x11, 1, buf);
+	SensorWrite (DESER_ADDR_WR, SLAVE_ID_1, 1, buf);
+	SensorWrite (DESER_ADDR_WR, SLAVE_ALIAS_1, 1, buf);
 
 	// Configure I2C passthrough for Serializer
 	buf[0] = SER_ADDR_WR;
-	SensorWrite (DESER_ADDR_WR, 0x07, 1, buf); // Write to SER alias register
+	SensorWrite (DESER_ADDR_WR, SER_ALIAS, 1, buf); // Write to SER alias register
 
 	// Disable GPIO 0 and 1 on deserializer
 	buf[0] = 0x22; // Disable GPIO 1 and 2
-	SensorWrite (DESER_ADDR_WR, 0x1D, 1, buf);
+	SensorWrite (DESER_ADDR_WR, DESER_GPIO_CONFIG, 1, buf);
 
 	// Configure VDDIO voltage on serializer, possibly unnecessary
 	buf[0] = 0x20; // defaults except for VDDIO mode which is now 1.8V
-	SensorWrite (SER_ADDR_WR, 0x01, 1, buf);
+	SensorWrite (SER_ADDR_WR, SER_PWR_RESET, 1, buf);
 
 	// Configure GPO 0 and 1 on serializer to bring GPO0 high to turn on imaging sensor
 	buf[0] = 0x19; // GPO1 enabled with low output, GPO0 enabled with high output
-	SensorWrite (SER_ADDR_WR, 0x0D, 1, buf);
+	SensorWrite (SER_ADDR_WR, SER_GPO_CONFIG, 1, buf);
 }
 
 /*
@@ -203,17 +216,20 @@ SensorScaling_752_480_30fps (
 {
     /*
        Video configuration
-	   0x086F frame period is d2159 lines,
-	   with a 15.4us line period = 0.0333s frame period (30 fps)
+       PLL is configured to run at 113.75 MHz
+       CLK_CTRL is PLL/2 = 56.875 MHz
+       Line length is h6E * 8 * period(CLK_CTRL) = 15.47 us
+       To achieve ~30fps therefore requires d2154 (h086A) lines
 	 */
-	SensorWrite2B (SENSOR_ADDR_WR, REG_T_FRAME_PERIOD, 0x08, 0x6F);
+	SensorWrite2B (SENSOR_ADDR_WR, REG_T_FRAME_PERIOD, 0x08, 0x6A);
 
 	/*
 	   ROI1 int time
-	   0x086E = d2158 Int time in number of lines. time for 1 line = 15.4us*57MHz/(CLK_CTRL in MHz)
-	   2158 lines at 57MHz clock should get us 30FPS
+	   Should be one less than reg_t_frame
+	   h0869 = d2153 Int time in number of lines.
+	   2153 lines at 56.875 MHz clock should get us 30FPS
 	 */
-	SensorWrite2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, 0x08, 0x6E);
+	SensorWrite2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, 0x08, 0x69);
 }
 
 /*
