@@ -1006,7 +1006,90 @@ UVCHandleProcessingUnitRqts (
                     break;
             }
             break;
-
+		case CY_FX_UVC_PU_GAIN_CONTROL:
+			switch (bRequest)
+			{
+				case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of gain data = 1 byte. */
+						glEp0Buffer[0] = 1;
+						CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+						break;
+				case CY_FX_USB_UVC_GET_CUR_REQ: /* Current gain value. */
+					glEp0Buffer[0] = SensorGetGain ();
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum gain = 0. */
+					glEp0Buffer[0] = 0;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum gain = 255. */
+					glEp0Buffer[0] = 7;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
+					glEp0Buffer[0] = 1;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
+					glEp0Buffer[0] = 3;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_DEF_REQ: /* Default gain value = 0. */
+					glEp0Buffer[0] = 0;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_SET_CUR_REQ: /* Update gain value. */
+					apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
+							glEp0Buffer, &readCount);
+					if (apiRetStatus == CY_U3P_SUCCESS)
+					{
+						SensorSetGain (glEp0Buffer[0]);
+					}
+					break;
+				default:
+					CyU3PUsbStall (0, CyTrue, CyFalse);
+					break;
+			}
+			break;
+			case CY_FX_UVC_PU_HUE_CONTROL : //This is how LED brightness is transmitted over USB. Added by Daniel 4_9_2015
+				switch (bRequest)
+				{
+				case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of brightness data = 1 byte. */
+					glEp0Buffer[0] = 1;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_CUR_REQ: /* Current brightness value. */
+					glEp0Buffer[0] = LedGetBrightness ();
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum brightness = 0. */
+					glEp0Buffer[0] = 0;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum brightness = 255. */
+					glEp0Buffer[0] = 255;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
+					glEp0Buffer[0] = 1;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
+					glEp0Buffer[0] = 3;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_GET_DEF_REQ: /* Default brightness value = 55. */
+					glEp0Buffer[0] = 0;
+					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+					break;
+				case CY_FX_USB_UVC_SET_CUR_REQ: /* Update brightness value. */
+					apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
+							glEp0Buffer, &readCount);
+					if (apiRetStatus == CY_U3P_SUCCESS) {
+						LedSetBrightness(glEp0Buffer[0]);
+					}
+					break;
+				}
+				break;
         default:
             /*
              * Only the brightness control is supported as of now. Add additional code here to support

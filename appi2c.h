@@ -82,4 +82,15 @@ SensorRead (
         uint8_t count,
         uint8_t *buf);
 
+/* Function    : SensorReadNoReg
+   Description : Read one byte of data from sensor over I2C interface.
+   Parameters  :
+                 slaveAddr - I2C slave address for the sensor.
+                 buf       - Buffer to be filled with one byte of data
+ */
+CyU3PReturnStatus_t
+SensorReadNoReg (
+        uint8_t slaveAddr,
+        uint8_t *buf);
+
 #endif

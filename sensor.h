@@ -114,6 +114,20 @@ extern void
 SensorSetBrightness (
         uint8_t input);
 
+/*
+   Get the current LED brightness.
+ */
+uint8_t
+LedGetBrightness (
+        void);
+
+/*
+   Set the current LED brightness.
+ */
+void
+LedSetBrightness (
+        uint8_t brightness);
+
 /* TODO #2-4 Add gain control function definitions */
 /* Copy the SensorGetBrightness and SensorSetBrightness function definitions from above
  * and paste them below this comment.

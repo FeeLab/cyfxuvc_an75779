@@ -151,7 +151,7 @@ SensorWriteNoReg (
 
     /* Set the parameters for the I2C API access and then call the write API. */
     preamble.buffer[0] = slaveAddr;
-    preamble.length    = 1;             /*  Two byte preamble. */
+    preamble.length    = 1;             /*  One byte preamble. */
     preamble.ctrlMask  = 0x0000;        /*  No additional start and stop bits. */
 
     buf[0] = data;
@@ -236,6 +236,25 @@ SensorRead (
     preamble.ctrlMask  = 0x0002;                                /*  Send start bit after second byte of preamble. */
 
     apiRetStatus = RobustI2cReceiveBytes (&preamble, buf, count, NRETRY);
+    SensorI2CAccessDelay (apiRetStatus);
+
+    return apiRetStatus;
+}
+
+CyU3PReturnStatus_t
+SensorReadNoReg (
+        uint8_t slaveAddr,
+        uint8_t *buf)
+{
+    CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
+    CyU3PI2cPreamble_t  preamble;
+
+    /* Set the parameters for the I2C API access and then call the write API. */
+    preamble.buffer[0] = slaveAddr;
+    preamble.length    = 1;             /*  One byte preamble. */
+    preamble.ctrlMask  = 0x0000;        /*  No additional start and stop bits. */
+
+    apiRetStatus = RobustI2cReceiveBytes (&preamble, buf, 1, NRETRY);
     SensorI2CAccessDelay (apiRetStatus);
 
     return apiRetStatus;

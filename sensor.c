@@ -67,9 +67,28 @@
 #define SER_PWR_RESET	   0x01
 #define SER_GPO_CONFIG     0x0D
 
+/* Global variables */
+static uint16_t exposureMaxLL = 0x0000; // Max exposure for this frame rate in number of lines
+
 static void Sensor_Configure_EV76C541 (void);
 static void SensorStart (void);
 static void SensorStop (void);
+
+static void
+FillBuff2B (
+		uint16_t input,
+		uint8_t *buf)
+{
+	buf[0] = (uint8_t) ((input & 0xFF00) >> 8);
+	buf[1] = (uint8_t) (input & 0x00FF);
+}
+
+static uint16_t
+Combine2B (
+		uint8_t *buf)
+{
+	return ((uint16_t) buf[0] << 8) | buf[1];
+}
 
 /*
  * Reset the EV76C541 sensor using GPIO.
@@ -233,6 +252,7 @@ SensorScaling_752_480_30fps (
 	   2153 lines at 56.875 MHz clock should get us 30FPS
 	 */
 	SensorWrite2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, 0x08, 0x69);
+	exposureMaxLL = 0x0869;
 }
 
 /*
@@ -242,16 +262,51 @@ uint8_t
 SensorGetBrightness ( // FIXME
         void)
 {
-    return 0x00;
+	uint32_t temp;
+	uint8_t buf[2];
+	SensorRead2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, buf);
+	temp = 255 * Combine2B (buf);
+    return temp / exposureMaxLL;
 }
 
 /*
    Update the brightness setting for the EV76C541 sensor.
  */
 void
-SensorSetBrightness ( // FIXME
+SensorSetBrightness (
         uint8_t input)
 {
+	uint32_t temp;
+	uint16_t exposureCurLL;
+	uint8_t buf[2];
+
+	temp = input * exposureMaxLL; // expand into 32 bit to avoid overflow
+	exposureCurLL = temp / 255; // integer division
+	FillBuff2B (exposureCurLL, buf);
+	SensorWrite (SENSOR_ADDR_WR, ROI1_T_INT_LL, 2, buf);
+}
+
+/*
+   Get the current LED brightness.
+ */
+uint8_t
+LedGetBrightness (
+        void)
+{
+    uint8_t buf[1];
+
+    SensorReadNoReg (LED_ADDR_RD, buf);
+    return (uint8_t) buf[0];
+}
+
+/*
+   Set the current LED brightness.
+ */
+void
+LedSetBrightness (
+        uint8_t brightness)
+{
+    SensorWriteNoReg (LED_ADDR_WR, brightness);
 }
 
 /*
@@ -264,7 +319,7 @@ SensorGetGain (
     uint8_t buf[1];
 
     SensorRead (SENSOR_ADDR_RD, ROI1_GAIN, 1, buf); // Only read first byte
-    return (uint8_t)buf[0];
+    return (uint8_t) buf[0];
 }
 
 /*
