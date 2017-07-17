@@ -27,6 +27,14 @@
       <GPIOPinNumber>GPIO_29</GPIOPinNumber>
       <Polarity>ActiveHigh</Polarity>
     </Signal>
+    <Signal ElementId="OUTPUT0" SignalType="Output" SpecialFunction="None">
+      <DisplayName>SYNC</DisplayName>
+      <GPIOPinNumber>GPIO_20</GPIOPinNumber>
+      <IntialValue>Low</IntialValue>
+      <Polarity>ActiveHigh</Polarity>
+      <Delay>Alpha</Delay>
+      <AssetionType>Assert</AssetionType>
+    </Signal>
   </Signals>
   <StateMachine>
     <AddressCounter />
@@ -118,6 +126,9 @@
         <CounterIncrement>1</CounterIncrement>
         <CounterInterrupt>Mask</CounterInterrupt>
       </Action>
+      <Action ElementId="DR_GPIO0" ActionType="DR_GPIO">
+        <ControlPinName>SYNC</ControlPinName>
+      </Action>
     </State>
     <State ElementId="STATE5" StateType="NormalState">
       <DisplayName>PUSH_DATA_SCK1</DisplayName>
@@ -138,36 +149,57 @@
         <CounterIncrement>1</CounterIncrement>
         <CounterInterrupt>Mask</CounterInterrupt>
       </Action>
+      <Action ElementId="DR_GPIO0" ActionType="DR_GPIO">
+        <ControlPinName>SYNC</ControlPinName>
+      </Action>
     </State>
     <State ElementId="STATE6" StateType="NormalState">
       <DisplayName>LINE_END_SCK0</DisplayName>
       <RepeatUntillNextTransition>True</RepeatUntillNextTransition>
       <RepeatCount>0</RepeatCount>
+      <Action ElementId="DR_GPIO0" ActionType="DR_GPIO">
+        <ControlPinName>SYNC</ControlPinName>
+      </Action>
     </State>
     <State ElementId="STATE7" StateType="NormalState">
       <DisplayName>LINE_END_SCK1</DisplayName>
       <RepeatUntillNextTransition>True</RepeatUntillNextTransition>
       <RepeatCount>0</RepeatCount>
+      <Action ElementId="DR_GPIO0" ActionType="DR_GPIO">
+        <ControlPinName>SYNC</ControlPinName>
+      </Action>
     </State>
     <State ElementId="STATE8" StateType="NormalState">
       <DisplayName>WAIT_TO_FILL_SCK0</DisplayName>
       <RepeatUntillNextTransition>True</RepeatUntillNextTransition>
       <RepeatCount>0</RepeatCount>
+      <Action ElementId="DR_GPIO0" ActionType="DR_GPIO">
+        <ControlPinName>SYNC</ControlPinName>
+      </Action>
     </State>
     <State ElementId="STATE9" StateType="NormalState">
       <DisplayName>WAIT_TO_FILL_SCK1</DisplayName>
       <RepeatUntillNextTransition>True</RepeatUntillNextTransition>
       <RepeatCount>0</RepeatCount>
+      <Action ElementId="DR_GPIO0" ActionType="DR_GPIO">
+        <ControlPinName>SYNC</ControlPinName>
+      </Action>
     </State>
     <State ElementId="STATE10" StateType="NormalState">
       <DisplayName>WAIT_FULL_SCK0</DisplayName>
       <RepeatUntillNextTransition>True</RepeatUntillNextTransition>
       <RepeatCount>0</RepeatCount>
+      <Action ElementId="DR_GPIO0" ActionType="DR_GPIO">
+        <ControlPinName>SYNC</ControlPinName>
+      </Action>
     </State>
     <State ElementId="STATE11" StateType="NormalState">
       <DisplayName>WAIT_FULL_SCK1</DisplayName>
       <RepeatUntillNextTransition>True</RepeatUntillNextTransition>
       <RepeatCount>0</RepeatCount>
+      <Action ElementId="DR_GPIO0" ActionType="DR_GPIO">
+        <ControlPinName>SYNC</ControlPinName>
+      </Action>
     </State>
     <State ElementId="STATE12" StateType="NormalState">
       <DisplayName>PARTIAL_BUF_IN_SCK0</DisplayName>

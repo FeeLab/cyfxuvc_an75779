@@ -589,7 +589,6 @@ CyFxUVCApplnInit (void)
     CyU3PDmaMultiChannelConfig_t dmaMultiConfig;
     CyU3PEpConfig_t              endPointConfig;
     CyU3PReturnStatus_t          apiRetStatus;
-    CyU3PGpioClock_t             gpioClock;
     CyU3PPibClock_t              pibclock;
 
 #ifdef USB_DEBUG_INTERFACE
@@ -609,21 +608,6 @@ CyFxUVCApplnInit (void)
 #endif
 
     clearFeatureRqtReceived = CyFalse;
-
-    /* Init the GPIO module */
-    gpioClock.fastClkDiv = 2;
-    gpioClock.slowClkDiv = 2;
-    gpioClock.simpleDiv  = CY_U3P_GPIO_SIMPLE_DIV_BY_2;
-    gpioClock.clkSrc     = CY_U3P_SYS_CLK;
-    gpioClock.halfDiv    = 0;
-
-    /* Initialize Gpio interface */
-    apiRetStatus = CyU3PGpioInit (&gpioClock, NULL);
-    if (apiRetStatus != 0)
-    {
-        CyU3PDebugPrint (4, "GPIO Init failed, Error Code = %d\n", apiRetStatus);
-        CyFxAppErrorHandler (apiRetStatus);
-    }
 
     /* Initialize the P-port. */
     pibclock.clkDiv      = 2;

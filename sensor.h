@@ -55,7 +55,8 @@
 /* GPIO 22 on FX3 is used to reset the Image sensor. */
 //#define SENSOR_RESET_GPIO 22
 
-
+/* GPIO 20 on FX3 is used as SYNC output -- high during FV */
+#define SENSOR_SYNC_GPIO 20
 
 /* Function     : SensorConfigureSerdes
    Description  : Configure the Serdes channel to CMOS board.
