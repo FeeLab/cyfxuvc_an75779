@@ -158,6 +158,45 @@ volatile static uint32_t glFrameCount = 0;              /* Number of video frame
 volatile static uint32_t glDmaDone = 1;                 /* Number of buffers transferred in the current frame. */
 #endif
 
+/* Function to handle 'back-channel' communication through saturation control */
+static void
+handleSaturationCommunication (
+		uint8_t  value)
+{
+	switch(value) {
+		case SATURATION_RECORD_START:
+			SensorStart ();
+			break;
+		case SATURATION_RECORD_END:
+			SensorStop ();
+			break;
+		case SATURATION_INIT:
+			SensorInit ();
+			break;
+		case SATURATION_FPS5:
+			// Nothing
+			break;
+		case SATURATION_FPS10:
+			// Nothing
+			break;
+		case SATURATION_FPS15:
+			// Nothing
+			break;
+		case SATURATION_FPS20:
+			// Nothing
+			break;
+		case SATURATION_FPS30:
+			SensorScaling_752_480_30fps ();
+			break;
+		case SATURATION_FPS60:
+			// Nothing
+			break;
+		default:
+			break;
+	}
+}
+
+
 /* Add the UVC packet header to the top of the specified DMA buffer. */
 void
 CyFxUVCAddHeader (
@@ -1034,46 +1073,90 @@ UVCHandleProcessingUnitRqts (
 					break;
 			}
 			break;
-			case CY_FX_UVC_PU_HUE_CONTROL : //This is how LED brightness is transmitted over USB. Added by Daniel 4_9_2015
-				switch (bRequest)
-				{
-				case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of brightness data = 1 byte. */
-					glEp0Buffer[0] = 1;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_CUR_REQ: /* Current brightness value. */
-					glEp0Buffer[0] = LedGetBrightness ();
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum brightness = 0. */
-					glEp0Buffer[0] = 0;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum brightness = 255. */
-					glEp0Buffer[0] = 255;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
-					glEp0Buffer[0] = 1;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
-					glEp0Buffer[0] = 3;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_DEF_REQ: /* Default brightness value = 55. */
-					glEp0Buffer[0] = 0;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_SET_CUR_REQ: /* Update brightness value. */
-					apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
-							glEp0Buffer, &readCount);
-					if (apiRetStatus == CY_U3P_SUCCESS) {
-						LedSetBrightness(glEp0Buffer[0]);
-					}
-					break;
+		case CY_FX_UVC_PU_HUE_CONTROL : //This is how LED brightness is transmitted over USB. Added by Daniel 4_9_2015
+			switch (bRequest)
+			{
+			case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of brightness data = 1 byte. */
+				glEp0Buffer[0] = 1;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_CUR_REQ: /* Current brightness value. */
+				glEp0Buffer[0] = LedGetBrightness ();
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum brightness = 0. */
+				glEp0Buffer[0] = 0;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum brightness = 255. */
+				glEp0Buffer[0] = 255;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
+				glEp0Buffer[0] = 1;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
+				glEp0Buffer[0] = 3;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_DEF_REQ: /* Default brightness value = 55. */
+				glEp0Buffer[0] = 0;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_SET_CUR_REQ: /* Update brightness value. */
+				apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
+						glEp0Buffer, &readCount);
+				if (apiRetStatus == CY_U3P_SUCCESS) {
+					LedSetBrightness(glEp0Buffer[0]);
 				}
 				break;
+			}
+			break;
+		case CY_FX_UVC_PU_SATURATION_CONTROL: //Added by Daniel 6_24_2015. Used for general communication between DAQ software and PCB
+			switch (bRequest)
+			{
+			case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of saturation data = 1 byte. */
+				glEp0Buffer[0] = 1;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_CUR_REQ: /* Get GPIO values. Not implemented in feescope. Added by Daniel 10_30_2015*/
+				glEp0Buffer[0] = 0x00; // Not implemented
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum saturation = 0. */
+				glEp0Buffer[0] = 0;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum saturation = 0x16. */
+				glEp0Buffer[0] = 0x16;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
+				glEp0Buffer[0] = 1;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
+				glEp0Buffer[0] = 3;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_GET_DEF_REQ: /* Default saturation = 0. */
+				glEp0Buffer[0] = 0;
+				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+				break;
+			case CY_FX_USB_UVC_SET_CUR_REQ: /* Update communication value. */
+				apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
+						glEp0Buffer, &readCount);
+				if (apiRetStatus == CY_U3P_SUCCESS)
+				{
+					handleSaturationCommunication (glEp0Buffer[0]);
+				}
+				break;
+			default:
+				CyU3PUsbStall (0, CyTrue, CyFalse);
+				break;
+			}
+			break;
         default:
             /*
              * Only the brightness control is supported as of now. Add additional code here to support

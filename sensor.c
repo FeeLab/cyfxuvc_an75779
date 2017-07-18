@@ -71,8 +71,6 @@
 static uint16_t exposureMaxLL = 0x0000; // Max exposure for this frame rate in number of lines
 
 static void Sensor_Configure_EV76C541 (void);
-static void SensorStart (void);
-static void SensorStop (void);
 
 static void
 FillBuff2B (
@@ -141,7 +139,7 @@ SensorInit (
     SensorStart ();
 }
 
-static void
+void
 SensorStart (
              void)
 {
@@ -150,7 +148,7 @@ SensorStart (
     SensorWriteConfirm2B (SENSOR_ADDR_WR, REG_CTRL_CFG, 0x00, 0x0E, CONFIRM_TRIES);
 }
 
-static void
+void
 SensorStop (
             void)
 {

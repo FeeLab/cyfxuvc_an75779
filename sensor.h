@@ -52,11 +52,19 @@
 #define I2C_MEMORY_ADDR_WR 0xA0         /* I2C slave address used to write to an EEPROM. */
 #define I2C_MEMORY_ADDR_RD 0xA1         /* I2C slave address used to read from an EEPROM. */
 
-/* GPIO 22 on FX3 is used to reset the Image sensor. */
-//#define SENSOR_RESET_GPIO 22
-
 /* GPIO 20 on FX3 is used as SYNC output -- high during FV */
 #define SENSOR_SYNC_GPIO 20
+
+/* Communication over saturation channel */
+#define SATURATION_RECORD_START	0x01
+#define SATURATION_RECORD_END	0x02
+#define SATURATION_INIT 		0x03
+#define SATURATION_FPS5			0x11
+#define SATURATION_FPS10		0x12
+#define	SATURATION_FPS15		0x13
+#define	SATURATION_FPS20		0x14
+#define SATURATION_FPS30		0x15
+#define	SATURATION_FPS60		0x16
 
 /* Function     : SensorConfigureSerdes
    Description  : Configure the Serdes channel to CMOS board.
@@ -73,6 +81,14 @@ SensorConfigureSerdes (
 extern void
 SensorInit (
         void);
+
+extern void
+SensorStart (
+		void);
+
+extern void
+SensorStop (
+		void);
 
 /* Function    : SensorReset
    Description : Reset the EV76C541 image sensor using FX3 GPIO.
