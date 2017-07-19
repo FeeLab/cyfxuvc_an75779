@@ -333,9 +333,9 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x00,0xC0,0x53,0x0A,            /* Min bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
         0x00,0xC0,0x53,0x0A,            /* Max bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
         0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated) */
-        0xDE, 0x15, 0x05, 0x00,         /* Default Frame Interval: 30 FPS */
+        0xAF, 0x15, 0x05, 0x00,         /* Default Frame Interval: 30 FPS */
 		0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-		0xDE, 0x15, 0x05, 0x00,         /* Shortest Frame Interval */
+		0xAF, 0x15, 0x05, 0x00,         /* Shortest Frame Interval */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */
@@ -659,9 +659,9 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x00,0xC0,0x53,0x0A,            /* Min bit rate bits/s; Changed by GL. */
         0x00,0xC0,0x53,0x0A,            /* Max bit rate bits/s; Changed by GL. */
         0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated); Changed by GL. */
-        0xDE, 0x15, 0x05, 0x00,         /* Default Frame Interval: 30 FPS */
+        0xAF, 0x15, 0x05, 0x00,         /* Default Frame Interval: 30 FPS */
         0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-        0xDE, 0x15, 0x05, 0x00,         /* Shortest Frame Interval */
+        0xAF, 0x15, 0x05, 0x00,         /* Shortest Frame Interval */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */
