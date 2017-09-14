@@ -62,10 +62,19 @@
 #define SLAVE_ALIAS_0      0x10
 #define SLAVE_ALIAS_1      0x11
 #define DESER_GPIO_CONFIG  0x1D
+#define DESER_BCC_WDT  	   0x20
 
 /* Serializer registers */
 #define SER_PWR_RESET	   0x01
+#define SER_GENERAL_CFG    0x03
 #define SER_GPO_CONFIG     0x0D
+#define SER_BCC_WDT		   0x1E
+#define SER_PLL_OVERWRITE  0x35
+
+//sets the Bidirectional Control Channel
+//Watchdog Timeout value in units of 2ms. This
+//field should not be set to 0
+#define BCC_WDT_TIMEOUT	   0x02
 
 /* Global variables */
 static uint16_t exposureMaxLL = 0x0000; // Max exposure for this frame rate in number of lines
@@ -180,12 +189,29 @@ SensorI2cBusTest (
 }
 
 void
-SensorConfigureSerdes (void)
+SensorConfigureSerdes (
+		void)
 {
-	uint8_t buf[2];
+	uint8_t buf[1];
 	/* Boost low frequency gain */
 	buf[0] = 0xC0;
 	SensorWrite (DESER_ADDR_WR, DESER_LF_GAIN, 1, buf);
+
+	// Configure watchdog timer for deserializer
+	buf[0] = BCC_WDT_TIMEOUT;
+	SensorWrite (DESER_ADDR_WR, DESER_BCC_WDT, 1, buf);
+
+	// Configure I2C passthrough for Serializer
+	buf[0] = SER_ADDR_WR;
+	SensorWrite (DESER_ADDR_WR, SER_ALIAS, 1, buf); // Write to SER alias register
+
+	// Configure SER_PLL_OVERWRITE when OV_CLK2PLL (in SER_GENRAL_CFG) is true
+	buf[0] = 0x01; // Use interal OSC
+	SensorWrite (SER_ADDR_WR, SER_PLL_OVERWRITE, 1, buf);
+
+	// Configure watchdog timer for serializer
+	buf[0] = BCC_WDT_TIMEOUT;
+	SensorWrite (SER_ADDR_WR, SER_BCC_WDT, 1, buf);
 
 	// Configure I2C passthrough for imaging sensor
 	buf[0] = SENSOR_ADDR_WR;
@@ -197,21 +223,31 @@ SensorConfigureSerdes (void)
 	SensorWrite (DESER_ADDR_WR, SLAVE_ID_1, 1, buf);
 	SensorWrite (DESER_ADDR_WR, SLAVE_ALIAS_1, 1, buf);
 
-	// Configure I2C passthrough for Serializer
-	buf[0] = SER_ADDR_WR;
-	SensorWrite (DESER_ADDR_WR, SER_ALIAS, 1, buf); // Write to SER alias register
-
 	// Disable GPIO 0 and 1 on deserializer
 	buf[0] = 0x22; // Disable GPIO 1 and 2
 	SensorWrite (DESER_ADDR_WR, DESER_GPIO_CONFIG, 1, buf);
 
-	// Configure VDDIO voltage on serializer, possibly unnecessary
-	buf[0] = 0x20; // defaults except for VDDIO mode which is now 1.8V
-	SensorWrite (SER_ADDR_WR, SER_PWR_RESET, 1, buf);
-
 	// Configure GPO 0 and 1 on serializer to bring GPO0 high to turn on imaging sensor
 	buf[0] = 0x19; // GPO1 enabled with low output, GPO0 enabled with high output
 	SensorWrite (SER_ADDR_WR, SER_GPO_CONFIG, 1, buf);
+}
+
+void
+SerdesInternalClk (
+		void)
+{
+	uint8_t buf[1];
+	buf[0] = 0xC7; // 0XC5 default, enable OV_CLK2PLL
+	SensorWrite (SER_ADDR_WR, SER_GENERAL_CFG, 1, buf);
+}
+
+void
+SerdesExternalPclk (
+		void)
+{
+	uint8_t buf[1];
+	buf[0] = 0xC5; // 0XC5 default, disable OV_CLK2PLL
+	SensorWrite (SER_ADDR_WR, SER_GENERAL_CFG, 1, buf);
 }
 
 /*
@@ -220,7 +256,8 @@ SensorConfigureSerdes (void)
    Also refer to the EV76C541 sensor datasheet for details.
  */
 static void
-Sensor_Configure_EV76C541( void ) //SPI configuration of sensor
+Sensor_Configure_EV76C541 (
+		void) //SPI configuration of sensor
 {
     // Trigger attiny20 initialization of E2V... this will reset the E2V
     SensorWriteNoReg (SENSOR_ADDR_WR, REG_ATTINY_INIT);

@@ -74,6 +74,22 @@ extern void
 SensorConfigureSerdes (
         void);
 
+/* Function     : SerdesInternalClk
+   Description  : Set serializer to use internal clock.
+   Parameters   : None
+ */
+extern void
+SerdesInternalClk (
+		void);
+
+/* Function     : SerdesExternalPclk
+   Description  : Set serializer to use pixel clock.
+   Parameters   : None
+ */
+extern void
+SerdesExternalPclk (
+		void);
+
 /* Function    : SensorInit
    Description : Initialize the EV76C541 sensor.
    Parameters  : None
