@@ -6,7 +6,7 @@
 #define I2C_SLAVEADDR_MASK 0xFE         /* Mask to get actual I2C slave address value without direction bit. */
 
 extern CyU3PReturnStatus_t
-SensorWriteConfirm2B (
+I2CWriteConfirm2B (
 		uint8_t slaveAddr,
 		uint8_t regAddr,
 		uint8_t highData,
@@ -25,13 +25,13 @@ CyFxUVCApplnI2CInit (void);
                  lowData   - Low byte of data to be written.
  */
 extern CyU3PReturnStatus_t
-SensorWrite2B (
+I2CWrite2B (
         uint8_t slaveAddr,
         uint8_t regAddr,
         uint8_t highData,
         uint8_t lowData);
 
-/* Function    : SensorWrite
+/* Function    : I2CWrite
    Description : Write arbitrary amount of data to image sensor over I2C interface.
    Parameters  :
                  slaveAddr - I2C slave address for the sensor.
@@ -41,18 +41,18 @@ SensorWrite2B (
                  buf       - Pointer to buffer containing data.
  */
 extern CyU3PReturnStatus_t
-SensorWrite (
+I2CWrite (
         uint8_t slaveAddr,
         uint8_t regAddr,
         uint8_t count,
         uint8_t *buf);
 
 CyU3PReturnStatus_t
-SensorWriteNoReg (
+I2CWriteNoReg (
         uint8_t slaveAddr,
         uint8_t data);
 
-/* Function    : SensorRead2B
+/* Function    : I2CRead2B
    Description : Read 2 bytes of data from image sensor over I2C interface.
    Parameters  :
                  slaveAddr - I2C slave address for the sensor.
@@ -61,12 +61,12 @@ SensorWriteNoReg (
                  buf       - Buffer to be filled with data. MSB goes in byte 0.
  */
 extern CyU3PReturnStatus_t
-SensorRead2B (
+I2CRead2B (
         uint8_t slaveAddr,
         uint8_t regAddr,
         uint8_t *buf);
 
-/* Function    : SensorRead
+/* Function    : I2CRead
    Description : Read arbitrary amount of data from image sensor over I2C interface.
    Parameters  :
                  slaveAddr - I2C slave address for the sensor.
@@ -76,20 +76,20 @@ SensorRead2B (
                  buf       - Buffer to be filled with data.
  */
 extern CyU3PReturnStatus_t
-SensorRead (
+I2CRead (
         uint8_t slaveAddr,
         uint8_t regAddr,
         uint8_t count,
         uint8_t *buf);
 
-/* Function    : SensorReadNoReg
+/* Function    : I2CReadNoReg
    Description : Read one byte of data from sensor over I2C interface.
    Parameters  :
                  slaveAddr - I2C slave address for the sensor.
                  buf       - Buffer to be filled with one byte of data
  */
 CyU3PReturnStatus_t
-SensorReadNoReg (
+I2CReadNoReg (
         uint8_t slaveAddr,
         uint8_t *buf);
 

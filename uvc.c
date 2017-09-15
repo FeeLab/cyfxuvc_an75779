@@ -70,6 +70,8 @@
 #include "appi2c.h"
 #include "app_error_handler.h"
 #include "sensor.h"
+#include "serdes.h"
+#include "auxiliary.h"
 #include "camera_ptzcontrol.h"
 #include "cyfxgpif2config.h"
 
@@ -679,6 +681,7 @@ CyFxUVCApplnInit (void)
     SensorReset ();
     SensorInit ();
     SerdesExternalPclk ();
+    SensorGetFeedback ();
 
     /* USB initialization. */
     apiRetStatus = CyU3PUsbStart ();

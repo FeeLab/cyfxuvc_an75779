@@ -77,16 +77,18 @@ RobustI2cReceiveBytes (
    false errors due to the slave being busy.
  */
 static void
-SensorI2CAccessDelay (
+AppI2CAccessDelay (
         CyU3PReturnStatus_t status)
 {
     /* Add a 10us delay if the I2C operation that preceded this call was successful. */
-    if (status == CY_U3P_SUCCESS)
-        CyU3PThreadSleep (1);
+    /*
+     * if (status == CY_U3P_SUCCESS)
+     *  CyU3PThreadSleep (1);
+     */
 }
 
 CyU3PReturnStatus_t
-SensorWriteConfirm2B (
+I2CWriteConfirm2B (
 		uint8_t slaveAddr,
 		uint8_t regAddr,
 		uint8_t highData,
@@ -98,10 +100,10 @@ SensorWriteConfirm2B (
 	uint32_t attempts = 0;
 	bool mismatch = false;
 	do {
-		apiRetStatus = SensorWrite2B (slaveAddr, regAddr, highData, lowData);
+		apiRetStatus = I2CWrite2B (slaveAddr, regAddr, highData, lowData);
 		if (apiRetStatus == CY_U3P_SUCCESS) {
 			mismatch = false;
-			SensorRead2B (slaveAddr | ~I2C_SLAVEADDR_MASK, regAddr, readbuf);
+			I2CRead2B (slaveAddr | ~I2C_SLAVEADDR_MASK, regAddr, readbuf);
 			mismatch = mismatch || readbuf[0] != highData;
 			mismatch = mismatch || readbuf[1] != lowData;
 		}
@@ -115,7 +117,7 @@ SensorWriteConfirm2B (
 
 /* Write to an I2C slave with two bytes of data. */
 CyU3PReturnStatus_t
-SensorWrite2B (
+I2CWrite2B (
         uint8_t slaveAddr,
         uint8_t regAddr,
         uint8_t highData,
@@ -135,13 +137,13 @@ SensorWrite2B (
     buf[1] = lowData;
 
     apiRetStatus = RobustI2cTramsmitBytes (&preamble, buf, 2, NRETRY);
-    SensorI2CAccessDelay (apiRetStatus);
+    AppI2CAccessDelay (apiRetStatus);
 
     return apiRetStatus;
 }
 
 CyU3PReturnStatus_t
-SensorWriteNoReg (
+I2CWriteNoReg (
         uint8_t slaveAddr,
         uint8_t data)
 {
@@ -157,13 +159,13 @@ SensorWriteNoReg (
     buf[0] = data;
 
     apiRetStatus = RobustI2cTramsmitBytes (&preamble, buf, 1, NRETRY);
-    SensorI2CAccessDelay (apiRetStatus);
+    AppI2CAccessDelay (apiRetStatus);
 
     return apiRetStatus;
 }
 
 CyU3PReturnStatus_t
-SensorWrite (
+I2CWrite (
         uint8_t slaveAddr,
         uint8_t regAddr,
         uint8_t count,
@@ -175,7 +177,7 @@ SensorWrite (
     /* Validate parameters. */
     if (count > 64)
     {
-        CyU3PDebugPrint (4, "ERROR: SensorWrite count > 64\n");
+        CyU3PDebugPrint (4, "ERROR: I2CWrite count > 64\n");
         return 1;
     }
 
@@ -186,13 +188,13 @@ SensorWrite (
     preamble.ctrlMask  = 0x0000;
 
     apiRetStatus = RobustI2cTramsmitBytes (&preamble, buf, count, NRETRY);
-    SensorI2CAccessDelay (apiRetStatus);
+    AppI2CAccessDelay (apiRetStatus);
 
     return apiRetStatus;
 }
 
 CyU3PReturnStatus_t
-SensorRead2B (
+I2CRead2B (
         uint8_t slaveAddr,
         uint8_t regAddr,
         uint8_t *buf)
@@ -207,13 +209,13 @@ SensorRead2B (
     preamble.ctrlMask  = 0x0002;                                /*  Send start bit after second byte of preamble. */
 
     apiRetStatus = RobustI2cReceiveBytes (&preamble, buf, 2, NRETRY);
-    SensorI2CAccessDelay (apiRetStatus);
+    AppI2CAccessDelay (apiRetStatus);
 
     return apiRetStatus;
 }
 
 CyU3PReturnStatus_t
-SensorRead (
+I2CRead (
         uint8_t slaveAddr,
         uint8_t regAddr,
         uint8_t count,
@@ -225,7 +227,7 @@ SensorRead (
     /* Validate the parameters. */
     if ( count > 64 )
     {
-        CyU3PDebugPrint (4, "ERROR: SensorWrite count > 64\n");
+        CyU3PDebugPrint (4, "ERROR: I2CWrite count > 64\n");
         return 1;
     }
 
@@ -236,13 +238,13 @@ SensorRead (
     preamble.ctrlMask  = 0x0002;                                /*  Send start bit after second byte of preamble. */
 
     apiRetStatus = RobustI2cReceiveBytes (&preamble, buf, count, NRETRY);
-    SensorI2CAccessDelay (apiRetStatus);
+    AppI2CAccessDelay (apiRetStatus);
 
     return apiRetStatus;
 }
 
 CyU3PReturnStatus_t
-SensorReadNoReg (
+I2CReadNoReg (
         uint8_t slaveAddr,
         uint8_t *buf)
 {
@@ -255,7 +257,7 @@ SensorReadNoReg (
     preamble.ctrlMask  = 0x0000;        /*  No additional start and stop bits. */
 
     apiRetStatus = RobustI2cReceiveBytes (&preamble, buf, 1, NRETRY);
-    SensorI2CAccessDelay (apiRetStatus);
+    AppI2CAccessDelay (apiRetStatus);
 
     return apiRetStatus;
 }

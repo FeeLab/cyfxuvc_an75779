@@ -33,24 +33,9 @@
    If the SADDR line is high, enable this #define to allow access to the correct I2C address for the sensor.
  */
 
-/* I2C address for the LED. */
-#define LED_ADDR_WR		0x98
-#define LED_ADDR_RD		0x99
-
-/* I2C address for the Deserializer. */
-#define DESER_ADDR_WR	0xC0
-#define DESER_ADDR_RD   0xC1
-
-/* I2C address for the Serializer. */
-#define SER_ADDR_WR		0xB0
-#define SER_ADDR_RD		0xB1
-
 /* I2C Slave address for the image sensor. */
 #define SENSOR_ADDR_WR 0xB8             /* Slave address used to write sensor registers. */
 #define SENSOR_ADDR_RD 0xB9             /* Slave address used to read from sensor registers. */
-
-#define I2C_MEMORY_ADDR_WR 0xA0         /* I2C slave address used to write to an EEPROM. */
-#define I2C_MEMORY_ADDR_RD 0xA1         /* I2C slave address used to read from an EEPROM. */
 
 /* GPIO 20 on FX3 is used as SYNC output -- high during FV */
 #define SENSOR_SYNC_GPIO 20
@@ -65,30 +50,6 @@
 #define	SATURATION_FPS20		0x14
 #define SATURATION_FPS30		0x15
 #define	SATURATION_FPS60		0x16
-
-/* Function     : SensorConfigureSerdes
-   Description  : Configure the Serdes channel to CMOS board.
-   Parameters   : None
- */
-extern void
-SensorConfigureSerdes (
-        void);
-
-/* Function     : SerdesInternalClk
-   Description  : Set serializer to use internal clock.
-   Parameters   : None
- */
-extern void
-SerdesInternalClk (
-		void);
-
-/* Function     : SerdesExternalPclk
-   Description  : Set serializer to use pixel clock.
-   Parameters   : None
- */
-extern void
-SerdesExternalPclk (
-		void);
 
 /* Function    : SensorInit
    Description : Initialize the EV76C541 sensor.
@@ -122,6 +83,14 @@ extern void
 SensorScaling_752_480_30fps (
         void);
 
+/* Function     : SensorGetFeedback
+   Description  : Read feedback register on EV76C541 sensor
+   Parameters   : None
+ */
+extern uint16_t
+SensorGetFeedback (
+		void);
+
 /* Function    : SensorI2cBusTest
    Description : Test whether the EV76C541 sensor is connected on the I2C bus.
    Parameters  : None
@@ -146,20 +115,6 @@ SensorGetBrightness (
 extern void
 SensorSetBrightness (
         uint8_t input);
-
-/*
-   Get the current LED brightness.
- */
-uint8_t
-LedGetBrightness (
-        void);
-
-/*
-   Set the current LED brightness.
- */
-void
-LedSetBrightness (
-        uint8_t brightness);
 
 /* TODO #2-4 Add gain control function definitions */
 /* Copy the SensorGetBrightness and SensorSetBrightness function definitions from above
