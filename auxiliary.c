@@ -9,6 +9,10 @@
 #include "appi2c.h"
 #include <cyu3types.h>
 
+#define REG_LED_BRIGHTNESS 0x00
+#define REG_ADC_CTRL	   0x01
+#define REG_ADC_PERIOD	   0x02
+
 /*
    Get the current LED brightness.
  */
@@ -16,10 +20,9 @@ uint8_t
 LedGetBrightness (
         void)
 {
-    uint8_t buf[1];
-
-    I2CReadNoReg (AUX_ADDR_RD, buf);
-    return (uint8_t) buf[0];
+    uint8_t brightness;
+    I2CRead(AUX_ADDR_RD, REG_LED_BRIGHTNESS, 1, &brightness);
+    return brightness;
 }
 
 /*
@@ -29,5 +32,5 @@ void
 LedSetBrightness (
         uint8_t brightness)
 {
-    I2CWriteNoReg (AUX_ADDR_WR, brightness);
+	I2CWrite (AUX_ADDR_WR, REG_LED_BRIGHTNESS, 1, &brightness);
 }

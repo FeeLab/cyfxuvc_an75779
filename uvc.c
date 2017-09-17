@@ -682,6 +682,7 @@ CyFxUVCApplnInit (void)
     SensorInit ();
     SerdesExternalPclk ();
     SensorGetFeedback ();
+    LedSetBrightness(0x01);
 
     /* USB initialization. */
     apiRetStatus = CyU3PUsbStart ();
