@@ -682,7 +682,7 @@ CyFxUVCApplnInit (void)
     SensorInit ();
     SerdesExternalPclk ();
     SensorGetFeedback ();
-    LedSetBrightness(0x01);
+    LedSetBrightness (0x00);
 
     /* USB initialization. */
     apiRetStatus = CyU3PUsbStart ();
@@ -1127,15 +1127,15 @@ UVCHandleProcessingUnitRqts (
 				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
 				break;
 			case CY_FX_USB_UVC_GET_CUR_REQ: /* Get GPIO values. Not implemented in feescope. Added by Daniel 10_30_2015*/
-				glEp0Buffer[0] = 0x00; // Not implemented
+				glEp0Buffer[0] = 0x15; // Not implemented
 				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
 				break;
-			case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum saturation = 0. */
-				glEp0Buffer[0] = 0;
+			case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum saturation = 0x15. */
+				glEp0Buffer[0] = 0x15;
 				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
 				break;
-			case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum saturation = 0x16. */
-				glEp0Buffer[0] = 0x16;
+			case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum saturation = 0x15. */
+				glEp0Buffer[0] = 0x15;
 				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
 				break;
 			case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
@@ -1146,8 +1146,8 @@ UVCHandleProcessingUnitRqts (
 				glEp0Buffer[0] = 3;
 				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
 				break;
-			case CY_FX_USB_UVC_GET_DEF_REQ: /* Default saturation = 0. */
-				glEp0Buffer[0] = 0;
+			case CY_FX_USB_UVC_GET_DEF_REQ: /* Default saturation = 0x15. */
+				glEp0Buffer[0] = 0x15;
 				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
 				break;
 			case CY_FX_USB_UVC_SET_CUR_REQ: /* Update communication value. */

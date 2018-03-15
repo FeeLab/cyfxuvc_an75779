@@ -47,6 +47,7 @@
 /* E2V registers */
 #define SOFT_RESET         0x01
 #define ABORT_MBX          0x03
+#define REG_MISCEL1		   0x06
 #define REG_CTRL_CFG       0x0B // Has restricted registers!
 #define REG_T_FRAME_PERIOD 0x0C
 #define ROI1_T_INT_LL      0x0E
@@ -54,6 +55,11 @@
 #define FB_STATUS          0x3E
 #define CHIP_ID            0x7F
 #define REG_FB_STATUS	   0x3E
+
+// Startup values
+#define MAX_OFFSET		   0x34 // Default max offset for REG_MISCEL1
+#define INITIAL_BRIGHTNESS 0xFF // 0x00 to 0xFF
+#define INITIAL_GAIN_BYTE  0x00 // See data sheet for details
 
 /* Global variables */
 static uint16_t exposureMaxLL = 0x0000; // Max exposure for this frame rate in number of lines
@@ -118,12 +124,13 @@ SensorInit (
     }
 
     Sensor_Configure_EV76C541 (); /* Configure EV76C541 */
-
+    SensorSetCompression (0x92);
     /* Update sensor configuration based on desired video stream parameters.
      * Using 752x480 at 30fps as default setting.
      */
     SensorScaling_752_480_30fps ();
-
+    SensorSetBrightness (INITIAL_BRIGHTNESS);
+    SensorSetGain (INITIAL_GAIN_BYTE);
     SensorStart ();
 }
 
@@ -267,5 +274,27 @@ void
 SensorSetGain (
         uint8_t input)
 {
-    I2CWrite (SENSOR_ADDR_WR, ROI1_GAIN, 1, &input); // Only write first byte
+    I2CWrite (SENSOR_ADDR_WR, ROI1_GAIN, 1, &input); // Write register, leaving digital gain alone
+}
+
+// Read compression knee point
+uint8_t
+SensorGetCompression(
+		void
+)
+{
+	uint8_t buf[2];
+	I2CRead (SENSOR_ADDR_RD, REG_MISCEL1, 2, buf); // Read current max offset and compression
+	return buf[1]; // knee is the second byte
+}
+
+// Update compression knee, must only be changed in standby mode
+void
+SensorSetCompression(
+		uint8_t input)
+{
+	uint8_t buf[2];
+	I2CRead (SENSOR_ADDR_RD, REG_MISCEL1, 1, buf); // Read current max offset into first byte
+	buf[1] = input; // set second byte to new knee point
+	I2CWrite (SENSOR_ADDR_WR, REG_MISCEL1, 2, buf); // Write old max offset and input compression
 }

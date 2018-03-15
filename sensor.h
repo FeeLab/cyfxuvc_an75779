@@ -139,6 +139,23 @@ extern void
 SensorSetGain (
         uint8_t input);
 
+/* Function    : SensorGetCompression
+   Description : Get the current compression knee point from the EV76C541 sensor.
+   Parameters  : None
+ */
+extern uint8_t
+SensorGetCompression (
+        void);
+
+/* Function    : SensorSetCompression
+   Description : Set the desired compression knee on the EV76C541 sensor.
+   Parameters  :
+                 knee - Desired knee point between 0x00 and 0x92.
+ */
+extern void
+SensorSetCompression (
+        uint8_t input);
+
 #endif /* _INCLUDED_SENSOR_H_ */
 
 /*[]*/
