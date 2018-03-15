@@ -1,3 +1,6 @@
+Feescope Firmware for EZ-USB FX3 HD 720P DAQ board.
+
+Modifications to stock firmware made by Galen Lynch.
 
                         CYPRESS SEMICONDUCTOR CORPORATION
 
