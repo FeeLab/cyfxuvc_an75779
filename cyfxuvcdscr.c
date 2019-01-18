@@ -39,7 +39,7 @@ const uint8_t CyFxUSBDeviceDscr[] =
         0x01,                           /* Device protocol */
         0x40,                           /* Maxpacket size for EP0 : 64 bytes */
         0xB4,0x04,                      /* Vendor ID */
-        0xF8,0x01,                      /* Product ID */
+        0xF8,0x01,                      /* Product ID; Changed by GL */
         0x00,0x00,                      /* Device release number */
         0x01,                           /* Manufacture string index */
         0x02,                           /* Product string index */
@@ -58,7 +58,7 @@ const uint8_t CyFxUSBDeviceDscrSS[] =
         0x01,                           /* Device protocol */
         0x09,                           /* Maxpacket size for EP0 : 2^9 Bytes */
         0xB4,0x04,                      /* Vendor ID */
-        0xF9,0x01,                      /* Product ID */
+        0xF9,0x01,                      /* Product ID; Changed by GL */
         0x00,0x00,                      /* Device release number */
         0x01,                           /* Manufacture string index */
         0x02,                           /* Product string index */
@@ -234,6 +234,7 @@ const uint8_t CyFxUSBHSConfigDscr[] =
          	 	 	 	 	 	 	 	 * Hue control supported: changes LED brightness
          	 	 	 	 	 	 	 	 * Saturation control supported: other commands to DAQ board
          	 	 	 	 	 	 	 	 * Gain control supported: analog gain to pixel readings
+                         * Changed by GL
          	 	 	 	 	 	 	 	 */
         0x00,                           /* String desc index : Not used */
 
@@ -333,10 +334,10 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0xE0, 0x01,                     /* Height in pixel; Changed by GL */
         0x00,0xC0,0x53,0x0A,            /* Min bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
         0x00,0xC0,0x53,0x0A,            /* Max bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
-        0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated) */
-        0xAF, 0x15, 0x05, 0x00,         /* Default Frame Interval: 30 FPS */
+        0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated); Changed by GL */
+        0xAF, 0x15, 0x05, 0x00,         /* Default Frame Interval: 30 FPS; Changed by GL */
 		0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-		0xAF, 0x15, 0x05, 0x00,         /* Shortest Frame Interval */
+        0xAF, 0x15, 0x05, 0x00,         /* Shortest Frame Interval; Changed by GL */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */
@@ -530,6 +531,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
 										 * Hue control supported: changes LED brightness
 										 * Saturation control supported: other commands to DAQ board
 										 * Gain control supported: analog gain to pixel readings
+                     * Changed by GL
 										 */
         0x00,                           /* String desc index : Not used */
 
@@ -661,8 +663,8 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x00,0xC0,0x53,0x0A,            /* Max bit rate bits/s; Changed by GL. */
         0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated); Changed by GL. */
         0xAF, 0x15, 0x05, 0x00,         /* Default Frame Interval: 30 FPS */
-        0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-        0xAF, 0x15, 0x05, 0x00,         /* Shortest Frame Interval */
+        0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported; Changed by GL */
+        0xAF, 0x15, 0x05, 0x00,         /* Shortest Frame Interval; Changed by GL */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */
@@ -737,9 +739,9 @@ const uint8_t CyFxUSBStringLangIDDscr[] =
 /* Standard Manufacturer String Descriptor */
 const uint8_t CyFxUSBManufactureDscr[] =
     {
-        0x0E,                           /* Descriptor Size */
+     0x0E,                           /* Descriptor Size; Changed by GL */
         CY_U3P_USB_STRING_DESCR,        /* Device Descriptor Type */
-        'F',0x00,
+        'F',0x00,                    /* Changed by GL, and subsequent DESCR lines */
         'e',0x00,
         'e',0x00,
         'L',0x00,
@@ -751,9 +753,9 @@ const uint8_t CyFxUSBManufactureDscr[] =
 /* Standard Product String Descriptor */
 const uint8_t CyFxUSBProductDscr[] =
     {
-        0x12,                           /* Descriptor Size */
+        0x12,                           /* Descriptor Size; Changed by GL */
         CY_U3P_USB_STRING_DESCR,        /* Device Descriptor Type */
-        'F',0x00,
+        'F',0x00,                       /* Changed by GL, and subsequent DESCR lines */
         'e',0x00,
         'e',0x00,
         'S',0x00,
