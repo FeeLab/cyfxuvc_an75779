@@ -24,7 +24,7 @@ CyFxUVCApplnI2CInit (void)
     /*  Set I2C Configuration */
     i2cConfig.bitRate    = 100000;      /*  100 KHz */
     i2cConfig.isDma      = CyFalse;
-    i2cConfig.busTimeout = 0x000FBE6E0; // 0x0000BE6E0 30 ms timeout @ 26 MHz core freq
+    i2cConfig.busTimeout = 0xFFFFBE6E0; // 0x0000BE6E0 30 ms timeout @ 26 MHz core freq
     i2cConfig.dmaTimeout = 0xFFFF;
 
     status = CyU3PI2cSetConfig (&i2cConfig, 0);
