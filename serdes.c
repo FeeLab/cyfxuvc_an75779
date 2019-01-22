@@ -59,10 +59,6 @@ SensorConfigureSerdes (
 	buf[0] = SER_ADDR_WR;
 	I2CWrite (DESER_ADDR_WR, SER_ALIAS, 1, buf); // Write to SER alias register
 
-	// Configure SER_PLL_OVERWRITE when OV_CLK2PLL (in SER_GENRAL_CFG) is true
-	buf[0] = 0x01; // Use interal OSC
-	I2CWrite (SER_ADDR_WR, SER_PLL_OVERWRITE, 1, buf);
-
 	// Configure watchdog timer for serializer
 	buf[0] = BCC_WDT_TIMEOUT;
 	I2CWrite (SER_ADDR_WR, SER_BCC_WDT, 1, buf);
@@ -84,32 +80,4 @@ SensorConfigureSerdes (
 	// Configure GPO 0 and 1 on serializer to bring GPO0 high to turn on imaging sensor
 	buf[0] = 0x19; // GPO1 enabled with low output, GPO0 enabled with high output
 	I2CWrite (SER_ADDR_WR, SER_GPO_CONFIG, 1, buf);
-}
-
-void
-SerdesInternalClk (
-		void)
-{
-	CyU3PReturnStatus_t status;
-	uint8_t buf[1];
-
-	buf[0] = 0xC7; // 0XC5 default, enable OV_CLK2PLL
-	status = I2CWrite (SER_ADDR_WR, SER_GENERAL_CFG, 1, buf);
-	if (status == CY_U3P_SUCCESS) {
-		CyU3PThreadSleep (1);
-	}
-}
-
-void
-SerdesExternalPclk (
-		void)
-{
-	CyU3PReturnStatus_t status;
-	uint8_t buf[1];
-
-	buf[0] = 0xC5; // 0XC5 default, disable OV_CLK2PLL
-	status = I2CWrite (SER_ADDR_WR, SER_GENERAL_CFG, 1, buf);
-	if (status == CY_U3P_SUCCESS) {
-			CyU3PThreadSleep (1);
-	}
 }

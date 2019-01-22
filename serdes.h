@@ -23,21 +23,3 @@
 extern void
 SensorConfigureSerdes (
         void);
-
-/* Function     : SerdesInternalClk
-   Description  : Set serializer to use internal clock.
-   Parameters   : None
- */
-extern void
-SerdesInternalClk (
-		void);
-
-/* Function     : SerdesExternalPclk
-   Description  : Set serializer to use pixel clock.
-   Parameters   : None
- */
-extern void
-SerdesExternalPclk (
-		void);
-
-#endif /* SERDES_H_ */
