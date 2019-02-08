@@ -23,3 +23,5 @@
 extern void
 SensorConfigureSerdes (
         void);
+
+#endif /* SERDES_H_ */
