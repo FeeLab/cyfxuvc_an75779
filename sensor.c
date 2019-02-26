@@ -197,12 +197,12 @@ SensorScaling_752_480_30fps (
 {
     /*
        Video configuration
-       PLL is configured to run at 114.4 MHz
-       CLK_CTRL is PLL/2 = 57.2 MHz
-       Line length is h6E * 8 * period(CLK_CTRL) = 15.38 us
+       PLL is configured to run at 114.0 MHz
+       CLK_CTRL is PLL/2 = 57.0 MHz
+       Line length is h6E * 8 * period(CLK_CTRL) = 15.44 us
        To achieve ~30fps therefore requires d2166 (h0876) lines
 	 */
-	I2CWrite2B (SENSOR_ADDR_WR, REG_T_FRAME_PERIOD, 0x08, 0x76);
+	I2CWrite2B (SENSOR_ADDR_WR, REG_T_FRAME_PERIOD, 0x08, 0x6F);
 
 	/*
 	   ROI1 int time
@@ -210,8 +210,8 @@ SensorScaling_752_480_30fps (
 	   h0875 = d2165 Int time in number of lines.
 	   2165 lines at 57.2 MHz clock should get us 30FPS
 	 */
-	I2CWrite2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, 0x08, 0x75);
-	exposureMaxLL = 0x0875;
+	I2CWrite2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, 0x08, 0x6E);
+	exposureMaxLL = 0x086E;
 }
 
 uint16_t

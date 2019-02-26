@@ -677,10 +677,8 @@ CyFxUVCApplnInit (void)
 
     /* Image sensor initialization. Reset and then initialize with appropriate configuration. */
     SensorConfigureSerdes ();
-    SerdesInternalClk ();
     SensorReset ();
     SensorInit ();
-    SerdesExternalPclk ();
     SensorGetFeedback ();
     LedSetBrightness (0x00);
 
