@@ -1,11 +1,11 @@
 
                         CYPRESS SEMICONDUCTOR CORPORATION
 
-                          EZ-USB FX3 HD 720P CAMERA KIT
+                            EZ-USB FX3 UVC CAMERA KIT
 
 
-FX3 CAMERA KIT FIRMWARE
------------------------
+FX3 UVC KIT FIRMWARE
+--------------------
 
     1. Introduction:
     ----------------
@@ -86,12 +86,72 @@ FX3 CAMERA KIT FIRMWARE
 
     The cyfxtx.c and cyfx_gcc_startup.S files used here are taken from the FX3 SDK
     release. This version of the application makes use of FX3 SDK release version
-    1.3.4.
+    1.3.3.
 
     When updating the application to work with a new SDK version, you need to copy
     the latest cyfxtx.c and cyfx_gcc_startup.S files from the new SDK into this
     project. You will also need to follow the instructions for porting to the new
     SDK that are included in the "Getting started with the FX3 SDK" document.
 
+    5. Guidelines to run UVC extension unit host application:
+    ---------------------------------------------------------
+
+    The extension unit supports Firmware version control. User can set or get firmware 
+    version. Run the uvc_extension_app_x64/x86 application. The firmware enumerates as
+    a "FX3" device. If the FX3 device is detected, user can select 1/2 to set/get 
+    firmware version. 
+    
+    1. Set firmware version: By default, application sets the firmware version to 
+       2.2 and build date to 12/20/18. Host application needs to be modified to set 
+       any other firmware version.
+    2. Get firmware version: Gives the current firmware version
+
+    Host application is uploaded on the Cypress Community forum (Refer App note). 
+    Based on the requirements, users can update the UVC host application. If the default 
+    app note firmware is loaded, the host application fails with the following print:
+    Function: SetGetExtensionUnit, ks_control->KsProperty(...) failed, Error code: 0x80070492
+
+    6. Tests done to check video stability:
+    ---------------------------------------
+
+    Video stability is important and a video freezing in a UVC host application is 
+    not a good sign. One might have to disconnect and re-connect the device to 
+    recover from such failures. Video may freeze when USB host is slower or 
+    Sensor/Image signal processor goes into a bad shape. The firmware has a commit buffer 
+    failure event and video timer to handle this. There will be a drop in few frames and 
+    the video re-starts. Tests done to recover from such failures:
+    
+    1. Stream video for 5 hours on a Windows PC in USB2 and USB3 mode. 
+          a. PC: Lenovo modelT530
+          b. OS: Win 10 Version 1607 (OS Build 14393.1480)
+          c. Application: eCAMView version 1.0.63.349
+          d. Hardware: CYUSB3KIT-003, CYUSB3ACC-004 and MT9M114 
+    2. Stream video for 5 hours on a MAC PC in USB2 and USB3 mode. 
+          a. PC: Mac book
+          b. OS: Mac OS Sierra 10.12
+          c. Application: Wirecast version 6.0.5
+          d. Hardware: CYUSB3KIT-003, CYUSB3ACC-004 and MT9M114
+
+    7. USB CV test on a Windows PC:
+    -------------------------------
+
+    USB CV test is standard command verifier test from usb.org. This test validates the 
+    descriptor and UVC functionality. Following test were carried out and all the tests
+    passed successfully.
+    
+    1. USB 2 CV test. Application: USB2 CV version 1.5.2.3. Tests done:
+          a. Chapter 9
+          b. Current Measurement
+          c. Device summary
+          d. UVC Descriptor
+          e. UVC functionality
+          f. UVC encoding unit test
+          g. UVC H.264 test
+    2. USB 3 CV test. Application: USB 3 GenX CV v2.1.5.0. Tests done:
+          a. Chapter 9
+          b. Current Measurement
+          c. Device summary
+          d. UVC Descriptor
+          e. UVC functionality
 []
 

@@ -34,6 +34,11 @@
 /* #define BACKFLOW_DETECT */           /* Enable if buffer overflow conditions are to be detected. */
 /* #define DEBUG_PRINT_FRAME_COUNT */   /* Enable UART debug prints to print the frame count every end of frame */
 /* #define USB_DEBUG_INTERFACE */       /* Enable custom USB interface for sensor interface debugging. */
+/* #define FX3_UVC_1_0_SUPPORT */       /* Enable to run as UVC 1.0 device. Default is UVC 1.1 device */
+/* #define UVC_EXTENSION_UNIT */        /* Enable to add a sample UVC extension unit that communicates with
+                                         * the host application associated with this firmware */
+#define FRAME_TIMER_ENABLE              /* Enable/Disable a timer that aborts an ongoing frame and restarts streaming
+                                         * when the transfer is stalled. Default setting is to enable frame timer */
 
 /* UVC application thread parameters. */
 #define UVC_APP_THREAD_STACK           (0x1000) /* Stack size for the video streaming thread is 4 KB. */
@@ -59,6 +64,12 @@
 #define CY_FX_EP_DEBUG_RSP              (CY_FX_EP_DEBUG_RSP_SOCKET | CY_FX_EP_IN_TYPE)          /* EP 4 IN */
 #endif
 
+/* Invalid state for the GPIF state machine */
+#define CY_FX_UVC_INVALID_GPIF_STATE    (257)
+
+/* Timeout period for the GPIF state machine switch */
+#define CY_FX_UVC_GPIF_SWITCH_TIMEOUT   (2)
+
 /* UVC Video Streaming Endpoint Packet Size */
 #define CY_FX_EP_BULK_VIDEO_PKT_SIZE    (0x400)         /* 1024 Bytes */
 
@@ -66,19 +77,22 @@
 #define CY_FX_EP_BULK_VIDEO_PKTS_COUNT  (0x10)          /* 16 packets (burst of 16) per DMA buffer. */
 
 /* DMA buffer size used for video streaming. */
-#define CY_FX_UVC_STREAM_BUF_SIZE      (CY_FX_EP_BULK_VIDEO_PKTS_COUNT * CY_FX_EP_BULK_VIDEO_PKT_SIZE)  /* 16 KB */
+#define CY_FX_UVC_STREAM_BUF_SIZE       (CY_FX_EP_BULK_VIDEO_PKTS_COUNT * CY_FX_EP_BULK_VIDEO_PKT_SIZE)  /* 16 KB */
 
 /* Maximum video data that can be accommodated in one DMA buffer. */
-#define CY_FX_UVC_BUF_FULL_SIZE        (CY_FX_UVC_STREAM_BUF_SIZE - 16)
+#define CY_FX_UVC_BUF_FULL_SIZE         (CY_FX_UVC_STREAM_BUF_SIZE - 16)
 
 /* Number of DMA buffers per GPIF DMA thread. */
-#define CY_FX_UVC_STREAM_BUF_COUNT     (4)
+#define CY_FX_UVC_STREAM_BUF_COUNT      (4)
 
 /* Low Byte - UVC Video Streaming Endpoint Packet Size */
 #define CY_FX_EP_BULK_VIDEO_PKT_SIZE_L  (uint8_t)(CY_FX_EP_BULK_VIDEO_PKT_SIZE & 0x00FF)
 
 /* High Byte - UVC Video Streaming Endpoint Packet Size and No. of BULK packets */
 #define CY_FX_EP_BULK_VIDEO_PKT_SIZE_H  (uint8_t)((CY_FX_EP_BULK_VIDEO_PKT_SIZE & 0xFF00) >> 8)
+
+/* Maximum commit buffer failures to detect a stop streaming event in a MAC OS */
+#define CY_FX_UVC_MAX_COMMIT_BUF_FAILURE_CNT    (30)
 
 /* Event bits used for signaling the UVC application threads. */
 
@@ -107,11 +121,24 @@
  */
 #define CY_FX_UVC_VIDEO_STREAM_REQUEST_EVENT    (1 << 3)
 
+/* FX3 DMA Reset event. This event is set when FX3 is not able to commit a buffer due to a slower USB Host or due to
+ * a frame timer overflow. When the device is streaming a higher resolution with higher fps, the USB bandwidth will
+ * be saturated and Host will not be able to keep up. The video stream may work for few seconds and then device will
+ * receive a commit buffer failure. It is also possible that Sensor/ISP fails to send video data due to some reasons.
+ * In such cases, it is better to reset DMA and restart the video stream so that there is a continuous video preview.
+ */
+#define CY_FX_UVC_DMA_RESET_EVENT               (1 << 4)
+
+/* USB suspend event handler. This event is set when the USB host sends a USB suspend event to put the FX3
+ * device into low power mode. This event is sent when the Host application is closed and after the device enumerates.
+ */
+#define CY_FX_USB_SUSPEND_EVENT_HANDLER         (1 << 5)
+
 #ifdef USB_DEBUG_INTERFACE
 /* USB Debug Command event. This event flag indicates that a USB debug command has been
    received on the command endpoint.
  */
-#define CY_FX_USB_DEBUG_CMD_EVENT               (1 << 4)
+#define CY_FX_USB_DEBUG_CMD_EVENT               (1 << 6)
 #endif
 
 /*
@@ -131,8 +158,15 @@
 
 #define CY_FX_UVC_MAX_HEADER           (12)             /* Maximum UVC header size, in bytes. */
 #define CY_FX_UVC_HEADER_DEFAULT_BFH   (0x8C)           /* Default BFH (Bit Field Header) for the UVC Header */
+
+#ifdef FX3_UVC_1_0_SUPPORT
 #define CY_FX_UVC_MAX_PROBE_SETTING    (26)             /* Maximum number of bytes in Probe Control */
 #define CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED (32)        /* Probe control data size aligned to 16 bytes. */
+#else
+#define CY_FX_UVC_MAX_PROBE_SETTING    (34)             /* Maximum number of bytes in Probe Control */
+#define CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED (48)        /* Probe control data size aligned to 16 bytes. */
+
+#endif
 
 #define CY_FX_UVC_HEADER_FRAME          (0)                     /* UVC header value for normal frame indication */
 #define CY_FX_UVC_HEADER_EOF            (uint8_t)(1 << 1)       /* UVC header value for end of frame indication */
@@ -199,6 +233,44 @@
 #define CY_FX_UVC_CT_PRIVACY_CONTROL                        (uint16_t)(0x1100)
 
 #define LOOP_TIMEOUT                                        (1000)      /* Period of frame count updates. */
+
+#ifdef UVC_EXTENSION_UNIT
+/* Extension Unit Terminal Controls specific UVC control selector codes */
+#define CY_FX_UVC_XU_GET_FIRMWARE_VERSION_CONTROL           (uint16_t)(0x0100)
+/* Customer specific controls can be added here */
+#endif
+
+/* Undefined Terminal Controls specific UVC control selector codes defined in the USB Video Class specification */
+#define CY_FX_UVC_VC_REQUEST_ERROR_CODE_CONTROL             (uint16_t)(0x0200)
+
+/* Video control Error Codes */
+#define CY_FX_UVC_VC_ERROR_CODE_NO_ERROR                    (0x00)
+#define CY_FX_UVC_VC_ERROR_CODE_NOT_READY                   (0x01)
+#define CY_FX_UVC_VC_ERROR_CODE_WRONG_STATE                 (0x02)
+#define CY_FX_UVC_VC_ERROR_CODE_POWER                       (0x03)
+#define CY_FX_UVC_VC_ERROR_CODE_OUT_OF_RANGE                (0x04)
+#define CY_FX_UVC_VC_ERROR_CODE_INVALID_UNIT                (0x05)
+#define CY_FX_UVC_VC_ERROR_CODE_INVALID_CONTROL             (0x06)
+#define CY_FX_UVC_VC_ERROR_CODE_INVALID_REQUEST             (0x07)
+#define CY_FX_UVC_VC_ERROR_CODE_INVALID_VAL_IN_RANGE        (0x08)
+#define CY_FX_UVC_VC_ERROR_CODE_UNKNOWN                     (0xFF)
+
+/* Enum for a DMA reset event */
+typedef enum CyFxUvcDmaResetVal
+{
+    CY_FX_UVC_DMA_RESET_EVENT_NOT_ACTIVE = 0,           /* FX3 DMA reset event haven't occurred */
+    CY_FX_UVC_DMA_RESET_COMMIT_BUFFER_FAILURE,          /* FX3 DMA reset event caused due to a commit buffer failure */
+    CY_FX_UVC_DMA_RESET_FRAME_TIMER_OVERFLOW            /* FX3 DMA reset event caused due to frame timer overflow */
+} CyFxUvcDmaResetVal_t;
+
+/* Enum for different frame timer values */
+typedef enum CyFxUvcFrameTimerVal
+{
+    CY_FX_UVC_FRAME_TIMER_VAL_100MS = 100,
+    CY_FX_UVC_FRAME_TIMER_VAL_200MS = 200,
+    CY_FX_UVC_FRAME_TIMER_VAL_300MS = 300,
+    CY_FX_UVC_FRAME_TIMER_VAL_400MS = 400,
+} CyFxUvcFrameTimerVal_t;
 
 /* Extern definitions of the USB Enumeration constant arrays used for the UVC application.
    These arrays are defined in the cyfxuvcdscr.c file.
