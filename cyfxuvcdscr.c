@@ -83,30 +83,178 @@ const uint8_t CyFxUSBDeviceQualDscr[] =
 /* Standard Full Speed Configuration Descriptor */
 const uint8_t CyFxUSBFSConfigDscr[] =
     {
-
         /* Configuration Descriptor Type */
         0x09,                           /* Descriptor Size */
         CY_U3P_USB_CONFIG_DESCR,        /* Configuration Descriptor Type */
-        0x09,0x00,                      /* Length of this descriptor and all sub descriptors */
-        0x00,                           /* Number of interfaces */
+        0x95,0x00,                      /* Length of this descriptor and all sub descriptors */
+        0x02,                           /* Number of interfaces */
         0x01,                           /* Configuration number */
         0x00,                           /* COnfiguration string index */
         0x80,                           /* Config characteristics - Bus powered */
         0x32,                           /* Max power consumption of device (in 2mA unit) : 100mA */
+
+        /* Interface Association Descriptor */
+        0x08,                           /* Descriptor Size */
+        CY_FX_INTF_ASSN_DSCR_TYPE,      /* Interface Association Descr Type: 11 */
+        0x00,                           /* I/f number of first VideoControl i/f */
+        0x02,                           /* Number of Video i/f */
+        0x0E,                           /* CC_VIDEO : Video i/f class code */
+        0x03,                           /* SC_VIDEO_INTERFACE_COLLECTION : Subclass code */
+        0x00,                           /* Protocol : Not used */
+        0x02,                           /* String desc index for interface */
+
+        /* Standard Video Control Interface Descriptor */
+        0x09,                           /* Descriptor size */
+        CY_U3P_USB_INTRFC_DESCR,        /* Interface Descriptor type */
+        0x00,                           /* Interface number */
+        0x00,                           /* Alternate setting number */
+        0x01,                           /* Number of end points */
+        0x0E,                           /* CC_VIDEO : Interface class */
+        0x01,                           /* CC_VIDEOCONTROL : Interface sub class */
+        0x00,                           /* Interface protocol code */
+        0x02,                           /* Interface descriptor string index */
+
+        /* Class specific VC Interface Header Descriptor */
+        0x0D,                           /* Descriptor size */
+        0x24,                           /* Class Specific I/f Header Descriptor type */
+        0x01,                           /* Descriptor Sub type : VC_HEADER */
+        0x10, 0x01,                     /* Revision of UVC class spec: 1.1 - Minimum version required
+                                           for USB Compliance. Not supported on Windows XP*/
+        0x51, 0x00,                     /* Total Size of class specific descriptors (till Output terminal) */
+        0x00,0x6C,0xDC,0x02,            /* Clock frequency : 48MHz(Deprecated) */
+        0x01,                           /* Number of streaming interfaces */
+        0x01,                           /* Video streaming I/f 1 belongs to VC i/f */
+
+        /* Input (Camera) Terminal Descriptor */
+        0x12,                           /* Descriptor size */
+        0x24,                           /* Class specific interface desc type */
+        0x02,                           /* Input Terminal Descriptor type */
+        0x01,                           /* ID of this terminal */
+        0x01,0x02,                      /* Camera terminal type */
+        0x00,                           /* No association terminal */
+        0x00,                           /* String desc index : Not used */
+#ifdef UVC_PTZ_SUPPORT
+        (uint8_t)(wObjectiveFocalLengthMin&0xFF),
+        (uint8_t)((wObjectiveFocalLengthMin>>8)&0xFF),
+        (uint8_t)(wObjectiveFocalLengthMax&0xFF),
+        (uint8_t)((wObjectiveFocalLengthMax>>8)&0xFF),
+        (uint8_t)(wOcularFocalLength&0xFF),
+        (uint8_t)((wOcularFocalLength>>8)&0xFF),
+#else
+        0x00,0x00,                      /* No optical zoom supported */
+        0x00,0x00,                      /* No optical zoom supported */
+        0x00,0x00,                      /* No optical zoom supported */
+#endif
+        0x03,                           /* Size of controls field for this terminal : 3 bytes */
+        0x00,0x00,0x00,                 /* bmControls field of camera terminal: No controls supported */
+
+        /* Processing Unit Descriptor */
+        0x0D,                           /* Descriptor size */
+        0x24,                           /* Class specific interface desc type */
+        0x05,                           /* Processing Unit Descriptor type */
+        0x02,                           /* ID of this terminal */
+        0x01,                           /* Source ID : 1 : Conencted to input terminal */
+        0x00,0x40,                      /* Digital multiplier */
+        0x03,                           /* Size of controls field for this terminal : 3 bytes */
+        0x00,0x00,0x00,                 /* bmControls field of processing unit: Brightness control supported */
+        0x00,                           /* String desc index : Not used */
+        0x00,                           /* Analog Video Standards Supported: None */
+
+        /* Extension Unit Descriptor */
+        0x1C,                           /* Descriptor size */
+        0x24,                           /* Class specific interface desc type */
+        0x06,                           /* Extension Unit Descriptor type */
+        0x03,                           /* ID of this terminal */
+        0xFF,0xFF,0xFF,0xFF,            /* 16 byte GUID */
+        0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFF,
+        0x00,                           /* Number of controls in this terminal */
+        0x01,                           /* Number of input pins in this terminal */
+        0x02,                           /* Source ID : 2 : Connected to Proc Unit */
+        0x03,                           /* Size of controls field for this terminal : 3 bytes */
+        0x00,0x00,0x00,                 /* No controls supported */
+        0x00,                           /* String desc index : Not used */
+
+        /* Output Terminal Descriptor */
+        0x09,                           /* Descriptor size */
+        0x24,                           /* Class specific interface desc type */
+        0x03,                           /* Output Terminal Descriptor type */
+        0x04,                           /* ID of this terminal */
+        0x01,0x01,                      /* USB Streaming terminal type */
+        0x00,                           /* No association terminal */
+        0x03,                           /* Source ID : 3 : Connected to Extn Unit */
+        0x00,                           /* String desc index : Not used */
+
+        /* Video Control Status Interrupt Endpoint Descriptor */
+        0x07,                           /* Descriptor size */
+        CY_U3P_USB_ENDPNT_DESCR,        /* Endpoint Descriptor Type */
+        CY_FX_EP_CONTROL_STATUS,        /* Endpoint address and description */
+        CY_U3P_USB_EP_INTR,             /* Interrupt End point Type */
+        0x40,0x00,                      /* Max packet size = 64 bytes */
+        0x08,                           /* Servicing interval : 8ms */
+
+        /* Class Specific Interrupt Endpoint Descriptor */
+        0x05,                           /* Descriptor size */
+        0x25,                           /* Class Specific Endpoint Descriptor Type */
+        CY_U3P_USB_EP_INTR,             /* End point Sub Type */
+        0x40,0x00,                      /* Max packet size = 64 bytes */
+
+        /* Standard Video Streaming Interface Descriptor (Alternate Setting 0) */
+        0x09,                           /* Descriptor size */
+        CY_U3P_USB_INTRFC_DESCR,        /* Interface Descriptor type */
+        0x01,                           /* Interface number */
+        0x00,                           /* Alternate setting number */
+        0x01,                           /* Number of end points : Zero Bandwidth */
+        0x0E,                           /* Interface class : CC_VIDEO */
+        0x02,                           /* Interface sub class : CC_VIDEOSTREAMING */
+        0x00,                           /* Interface protocol code : Undefined */
+        0x00,                           /* Interface descriptor string index */
+
+       /* Class-specific Video Streaming Input Header Descriptor */
+        0x0E,                           /* Descriptor size */
+        0x24,                           /* Class-specific VS I/f Type */
+        0x01,                           /* Descriptotor Subtype : Input Header */
+        0x00,                           /* No format desciptor supported for FS device */
+        0x0E,0x00,                      /* Total size of Class specific VS descr */
+        CY_FX_EP_BULK_VIDEO,            /* EP address for BULK video data */
+        0x00,                           /* No dynamic format change supported */
+        0x04,                           /* Output terminal ID : 4 */
+        0x01,                           /* Still image capture method 1 supported */
+        0x00,                           /* Hardware trigger NOT supported */
+        0x00,                           /* Hardware to initiate still image capture NOT supported */
+        0x01,                           /* Size of controls field : 1 byte */
+        0x00,                           /* D2 : Compression quality supported */
+
+        /* Endpoint Descriptor for BULK Streaming Video Data */
+        0x07,                           /* Descriptor size */
+        CY_U3P_USB_ENDPNT_DESCR,        /* Endpoint Descriptor Type */
+        CY_FX_EP_BULK_VIDEO,            /* Endpoint address and description */
+        0x02,                           /* BULK End point */
+        0x40,                           /* EP Packet Size: 64 bytes */
+        0x00,
+        0x00                            /* Servicing interval for data transfers */
     };
 
 /* Standard High Speed Configuration Descriptor */
 const uint8_t CyFxUSBHSConfigDscr[] =
     {
-
         /* Configuration Descriptor Type */
         0x09,                           /* Descriptor Size */
         CY_U3P_USB_CONFIG_DESCR,        /* Configuration Descriptor Type */
 #ifdef USB_DEBUG_INTERFACE
+#ifdef FX3_UVC_1_0_SUPPORT
         0xE4,0x00,                      /* Length of this descriptor and all sub descriptors */
+#else
+        0xE5,0x00,                      /* Length of this descriptor and all sub descriptors */
+#endif
         0x03,                           /* Number of interfaces */
 #else
+#ifdef FX3_UVC_1_0_SUPPORT
         0xCD,0x00,                      /* Length of this descriptor and all sub descriptors */
+#else
+        0xCE,0x00,                      /* Length of this descriptor and all sub descriptors */
+#endif
         0x02,                           /* Number of interfaces */
 #endif
         0x01,                           /* Configuration number */
@@ -122,7 +270,7 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x0E,                           /* CC_VIDEO : Video i/f class code */
         0x03,                           /* SC_VIDEO_INTERFACE_COLLECTION : Subclass code */
         0x00,                           /* Protocol : Not used */
-        0x00,                           /* String desc index for interface */
+        0x02,                           /* String desc index for interface */
 
         /* Standard Video Control Interface Descriptor */
         0x09,                           /* Descriptor size */
@@ -133,14 +281,20 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x0E,                           /* CC_VIDEO : Interface class */
         0x01,                           /* CC_VIDEOCONTROL : Interface sub class */
         0x00,                           /* Interface protocol code */
-        0x00,                           /* Interface descriptor string index */
+        0x02,                           /* Interface descriptor string index */
 
         /* Class specific VC Interface Header Descriptor */
         0x0D,                           /* Descriptor size */
         0x24,                           /* Class Specific I/f Header Descriptor type */
         0x01,                           /* Descriptor Sub type : VC_HEADER */
-        0x00,0x01,                      /* Revision of class spec : 1.0 */
-        0x50,0x00,                      /* Total Size of class specific descriptors (till Output terminal) */
+#ifdef FX3_UVC_1_0_SUPPORT
+        0x00, 0x01,                     /* Revision of UVC class spec: 1.0 - Legacy version */
+        0x50, 0x00,                     /* Total Size of class specific descriptors (till Output terminal) */
+#else
+        0x10, 0x01,                     /* Revision of UVC class spec: 1.1 - Minimum version required
+                                           for USB Compliance. Not supported on Windows XP*/
+        0x51, 0x00,                     /* Total Size of class specific descriptors (till Output terminal) */
+#endif
         0x00,0x6C,0xDC,0x02,            /* Clock frequency : 48MHz(Deprecated) */
         0x01,                           /* Number of streaming interfaces */
         0x01,                           /* Video streaming I/f 1 belongs to VC i/f */
@@ -199,7 +353,11 @@ const uint8_t CyFxUSBHSConfigDscr[] =
 #endif
 
         /* Processing Unit Descriptor */
+#ifdef FX3_UVC_1_0_SUPPORT
         0x0C,                           /* Descriptor size */
+#else
+        0x0D,                           /* Descriptor size */
+#endif
         0x24,                           /* Class specific interface desc type */
         0x05,                           /* Processing Unit Descriptor type */
         0x02,                           /* ID of this terminal */
@@ -237,7 +395,29 @@ const uint8_t CyFxUSBHSConfigDscr[] =
                          * Changed by GL
          	 	 	 	 	 	 	 	 */
         0x00,                           /* String desc index : Not used */
+#ifndef FX3_UVC_1_0_SUPPORT
+        0x00,                           /* Analog Video Standards Supported: None */
+#endif
 
+#ifdef UVC_EXTENSION_UNIT
+        /* Extension Unit Descriptor */
+        0x1C,                           /* Descriptor size */
+        0x24,                           /* Class specific interface desc type */
+        0x06,                           /* Extension Unit Descriptor type */
+        0x03,                           /* ID of this terminal */
+        //static const GUID <<name>> =
+        //{ 0xacb6890c, 0xa3b3, 0x4060,{ 0x8b, 0x9a, 0xdf, 0x34, 0xee, 0xf3, 0x9a, 0x2e } };
+        0x0C, 0x89, 0xB6, 0xAC,         /* GUID specific to AN75779 firmware. Obtained from Visual studio */
+        0xB3, 0xA3, 0x60, 0x40,
+        0x8B, 0x9A, 0xDF, 0x34,
+        0xEE, 0xF3, 0x9A, 0x2E,
+        0x01,                           /* Number of controls in this terminal */
+        0x01,                           /* Number of input pins in this terminal */
+        0x02,                           /* Source ID : 2 : Connected to Proc Unit */
+        0x03,                           /* Size of controls field for this terminal : 3 bytes */
+        0x01, 0x00, 0x00,               /* Controls supported */
+        0x00,                           /* String descriptor index : Not used */
+#else
         /* Extension Unit Descriptor */
         0x1C,                           /* Descriptor size */
         0x24,                           /* Class specific interface desc type */
@@ -253,6 +433,7 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x03,                           /* Size of controls field for this terminal : 3 bytes */
         0x00,0x00,0x00,                 /* No controls supported */
         0x00,                           /* String desc index : Not used */
+#endif
 
         /* Output Terminal Descriptor */
         0x09,                           /* Descriptor size */
@@ -294,7 +475,7 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x24,                           /* Class-specific VS I/f Type */
         0x01,                           /* Descriptotor Subtype : Input Header */
         0x01,                           /* 1 format desciptor follows */
-        0x29,0x00,                      /* Total size of Class specific VS descr: 41 Bytes */
+        0x47,0x00,                      /* Total size of Class specific VS descr */
         CY_FX_EP_BULK_VIDEO,            /* EP address for BULK video data */
         0x00,                           /* No dynamic format change supported */
         0x04,                           /* Output terminal ID : 4 */
@@ -315,7 +496,7 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x80,0x00,0x00,0xAA,
         0x00,0x38,0x9B,0x71,
         0x10,                           /* Number of bits per pixel used to specify color in the decoded video frame.
-                                           0 if not applicable: 10 bit per pixel */
+                                           0 if not applicable: 16 bit per pixel */
         0x01,                           /* Optimum Frame Index for this stream: 1 */
         0x2F,                           /* X dimension of the picture aspect ratio: Non-interlaced in
 			        	   progressive scan; Changed by GL */
@@ -329,15 +510,15 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x24,                           /* Descriptor type*/
         0x05,                           /* Subtype: uncompressed frame I/F */
         0x01,                           /* Frame Descriptor Index */
-        0x03,                           /* Still image capture method 1 supported, fixed frame rate */
+        0x01,                           /* Still image capture method 1 supported, fixed frame rate */
         0xF0, 0x02,                     /* Width in pixel; Changed by GL */
         0xE0, 0x01,                     /* Height in pixel; Changed by GL */
         0x00,0xC0,0x53,0x0A,            /* Min bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
         0x00,0xC0,0x53,0x0A,            /* Max bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
         0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated) */
         0x07, 0x16, 0x05, 0x00,         /* Default Frame Interval: 30 FPS, Changed by JRS */
-		0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-		0x07, 0x16, 0x05, 0x00,         /* Shortest Frame Interval, Changed by JRS */
+        0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
+        0x07, 0x16, 0x05, 0x00,         /* Shortest Frame Interval, Changed by JRS */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */
@@ -346,7 +527,7 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x02,                           /* BULK End point */
         (uint8_t)(512 & 0x00FF),        /* High speed max packet size is always 512 bytes. */
         (uint8_t)((512 & 0xFF00)>>8),
-        0x01                            /* Servicing interval for data transfers */
+        0x00                            /* Servicing interval for data transfers */
 
 #ifdef USB_DEBUG_INTERFACE
         ,
@@ -423,10 +604,18 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x09,                           /* Descriptor Size */
         CY_U3P_USB_CONFIG_DESCR,        /* Configuration Descriptor Type */
 #ifdef USB_DEBUG_INTERFACE
+#ifdef FX3_UVC_1_0_SUPPORT
         0xFC,0x00,                      /* Total length of this and all sub-descriptors. */
+#else
+        0xFD,0x00,                      /* Total length of this and all sub-descriptors. */
+#endif
         0x03,                           /* Number of interfaces */
 #else
+#ifdef FX3_UVC_1_0_SUPPORT
         0xD9,0x00,                      /* Length of this descriptor and all sub descriptors */
+#else
+        0xDA,0x00,                      /* Length of this descriptor and all sub descriptors */
+#endif
         0x02,                           /* Number of interfaces */
 #endif
         0x01,                           /* Configuration number */
@@ -442,7 +631,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x0E,                           /* CC_VIDEO : Video i/f class code */
         0x03,                           /* SC_VIDEO_INTERFACE_COLLECTION : Subclass code */
         0x00,                           /* Protocol : Not used */
-        0x00,                           /* String desc index for interface */
+        0x02,                           /* String desc index for interface */
 
         /* Standard Video Control Interface Descriptor */
         0x09,                           /* Descriptor size */
@@ -453,14 +642,20 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x0E,                           /* CC_VIDEO : Interface class */
         0x01,                           /* CC_VIDEOCONTROL : Interface sub class */
         0x00,                           /* Interface protocol code */
-        0x00,                           /* Interface descriptor string index */
+        0x02,                           /* Interface descriptor string index */
 
         /* Class specific VC Interface Header Descriptor */
         0x0D,                           /* Descriptor size */
         0x24,                           /* Class Specific I/f Header Descriptor type */
         0x01,                           /* Descriptor Sub type : VC_HEADER */
-        0x00,0x01,                      /* Revision of class spec : 1.0 */
-        0x50,0x00,                      /* Total Size of class specific descriptors (till Output terminal) */
+#ifdef FX3_UVC_1_0_SUPPORT
+        0x00, 0x01,                     /* Revision of UVC class spec: 1.0 - Legacy version */
+        0x50, 0x00,                     /* Total Size of class specific descriptors (till Output terminal) */
+#else
+        0x10, 0x01,                     /* Revision of UVC class spec: 1.1 - Minimum version required
+                                           for USB Compliance. Not supported on Windows XP*/
+        0x51, 0x00,                     /* Total Size of class specific descriptors (till Output terminal) */
+#endif
         0x00,0x6C,0xDC,0x02,            /* Clock frequency : 48MHz(Deprecated) */
         0x01,                           /* Number of streaming interfaces */
         0x01,                           /* Video streaming I/f 1 belongs to VC i/f */
@@ -519,11 +714,15 @@ const uint8_t CyFxUSBSSConfigDscr[] =
 #endif
 
         /* Processing Unit Descriptor */
+#ifdef FX3_UVC_1_0_SUPPORT
         0x0C,                           /* Descriptor size */
+#else
+        0x0D,                           /* Descriptor size */
+#endif
         0x24,                           /* Class specific interface desc type */
         0x05,                           /* Processing Unit Descriptor type */
         0x02,                           /* ID of this terminal */
-        0x01,                           /* Source ID : 1 : Conencted to input terminal */
+        0x01,                           /* Source ID : 1 : Connected to input terminal */
         0x00,0x40,                      /* Digital multiplier */
         0x03,                           /* Size of controls field for this terminal : 3 bytes */
         0x0F,0x02,0x00,                 /* bmControls field of processing unit:
@@ -534,7 +733,29 @@ const uint8_t CyFxUSBSSConfigDscr[] =
                      * Changed by GL
 										 */
         0x00,                           /* String desc index : Not used */
+#ifndef FX3_UVC_1_0_SUPPORT
+        0x00,                           /* Analog Video Standards Supported: None */
+#endif
 
+#ifdef UVC_EXTENSION_UNIT
+        /* Extension Unit Descriptor */
+        0x1C,                           /* Descriptor size */
+        0x24,                           /* Class specific interface desc type */
+        0x06,                           /* Extension Unit Descriptor type */
+        0x03,                           /* ID of this terminal */
+        //static const GUID <<name>> =
+        //{ 0xacb6890c, 0xa3b3, 0x4060,{ 0x8b, 0x9a, 0xdf, 0x34, 0xee, 0xf3, 0x9a, 0x2e } };
+        0x0C, 0x89, 0xB6, 0xAC,         /* GUID specific to AN75779 firmware. Obtained from Visual studio */
+        0xB3, 0xA3, 0x60, 0x40,
+        0x8B, 0x9A, 0xDF, 0x34,
+        0xEE, 0xF3, 0x9A, 0x2E,
+        0x01,                           /* Number of controls in this terminal */
+        0x01,                           /* Number of input pins in this terminal */
+        0x02,                           /* Source ID : 2 : Connected to Proc Unit */
+        0x03,                           /* Size of controls field for this terminal : 3 bytes */
+        0x01, 0x00, 0x00,               /* Controls supported */
+        0x00,                           /* String descriptor index : Not used */
+#else
         /* Extension Unit Descriptor */
         0x1C,                           /* Descriptor size */
         0x24,                           /* Class specific interface desc type */
@@ -548,31 +769,9 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x01,                           /* Number of input pins in this terminal */
         0x02,                           /* Source ID : 2 : Connected to Proc Unit */
         0x03,                           /* Size of controls field for this terminal : 3 bytes */
-                                        /* A bit set to 1 in the bmControls field indicates that
-                                         * the mentioned Control is supported for the video stream.
-                                         * D0: Brightness
-                                         * D1: Contrast
-                                         * D2: Hue
-                                         * D3: Saturation
-                                         * D4: Sharpness
-                                         * D5: Gamma
-                                         * D6: White Balance Temperature
-                                         * D7: White Balance Component
-                                         * D8: Backlight Compensation
-                                         * D9: Gain
-                                         * D10: Power Line Frequency
-                                         * D11: Hue, Auto
-                                         * D12: White Balance Temperature, Auto
-                                         * D13: White Balance Component, Auto
-                                         * D14: Digital Multiplier
-                                         * D15: Digital Multiplier Limit
-                                         * D16: Analog Video Standard
-                                         * D17: Analog Video Lock Status
-                                         * D18: Contrast, Auto
-                                         * D19 – D23: Reserved. Set to zero.
-                                         */
         0x00,0x00,0x00,                 /* No controls supported */
         0x00,                           /* String desc index : Not used */
+#endif
 
         /* Output Terminal Descriptor */
         0x09,                           /* Descriptor size */
@@ -589,7 +788,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         CY_U3P_USB_ENDPNT_DESCR,        /* Endpoint Descriptor Type */
         CY_FX_EP_CONTROL_STATUS,        /* Endpoint address and description */
         CY_U3P_USB_EP_INTR,             /* Interrupt End point Type */
-        0x00,0x04,                      /* Max packet size = 1024 bytes */
+        0x40,0x00,                      /* Max packet size = 64 bytes */
         0x01,                           /* Servicing interval */
 
         /* Super Speed Endpoint Companion Descriptor */
@@ -633,7 +832,6 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x01,                           /* Size of controls field : 1 byte */
         0x00,                           /* D2 : Compression quality supported */
 
-
         /* Class specific Uncompressed VS format descriptor */
         0x1B,                           /* Descriptor size */
         0x24,                           /* Class-specific VS I/f Type */
@@ -656,7 +854,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x24,                           /* Descriptor type*/
         0x05,                           /* Subtype: uncompressed frame I/F */
         0x01,                           /* Frame Descriptor Index */
-        0x03,                           /* Still image capture method 1 supported, fixed frame rate */
+        0x01,                           /* Still image capture method 1 supported, fixed frame rate */
         0xF0, 0x02,                     /* Width in pixel; Changed by GL */
         0xE0, 0x01,                     /* Height in pixel; Changed by GL */
         0x00,0xC0,0x53,0x0A,            /* Min bit rate bits/s; Changed by GL. */
@@ -673,7 +871,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         CY_U3P_USB_EP_BULK,             /* BULK End point */
         CY_FX_EP_BULK_VIDEO_PKT_SIZE_L, /* EP MaxPcktSize: 1024B */
         CY_FX_EP_BULK_VIDEO_PKT_SIZE_H, /* EP MaxPcktSize: 1024B */
-        0x01,                           /* Servicing interval for data transfers */
+        0x00,                           /* Servicing interval for data transfers */
 
         /* Super Speed Endpoint Companion Descriptor */
         0x06,                           /* Descriptor size */
