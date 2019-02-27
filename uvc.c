@@ -537,7 +537,7 @@ CyFxUVCApplnDebugInit (
     }
 
     /* Set UART Configuration */
-    uartConfig.baudRate = CY_U3P_UART_BAUDRATE_115200;
+    uartConfig.baudRate = CY_U3P_UART_BAUDRATE_57600;
     uartConfig.stopBit  = CY_U3P_UART_ONE_STOP_BIT;
     uartConfig.parity   = CY_U3P_UART_NO_PARITY;
     uartConfig.txEnable = CyTrue;
@@ -1691,7 +1691,7 @@ main (
     io_cfg.isDQ32Bit        = CyTrue;
     io_cfg.s0Mode       	= CyFalse;
     io_cfg.s1Mode	        = CyFalse;
-    io_cfg.lppMode          = CY_U3P_IO_MATRIX_LPP_DEFAULT;
+    io_cfg.lppMode          = CY_U3P_IO_MATRIX_LPP_UART_ONLY;
     io_cfg.gpioSimpleEn[0]  = 0;
     io_cfg.gpioSimpleEn[1]  = 0;
     io_cfg.gpioComplexEn[0] = 0;
