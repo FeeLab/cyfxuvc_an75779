@@ -717,43 +717,6 @@ CyFxUVCApplnInit (void)
     CyFxUvcAppPTZInit ();
 #endif
 
-    /* Init the GPIO module */
-    gpioClock.fastClkDiv = 2;
-    gpioClock.slowClkDiv = 2;
-    gpioClock.simpleDiv  = CY_U3P_GPIO_SIMPLE_DIV_BY_2;
-    gpioClock.clkSrc     = CY_U3P_SYS_CLK;
-    gpioClock.halfDiv    = 0;
-
-    /* Initialize Gpio interface */
-    apiRetStatus = CyU3PGpioInit (&gpioClock, NULL);
-    if (apiRetStatus != 0)
-    {
-        CyU3PDebugPrint (4, "GPIO Init failed, Error Code = %d\n", apiRetStatus);
-        CyFxAppErrorHandler (apiRetStatus);
-    }
-
-    /* CTL pins are restricted and cannot be configured using I/O matrix configuration function,
-     * must use GpioOverride to configure it */
-    apiRetStatus = CyU3PDeviceGpioOverride (SENSOR_RESET_GPIO, CyTrue);
-    if (apiRetStatus != 0)
-    {
-        CyU3PDebugPrint (4, "GPIO Override failed, Error Code = %d\n", apiRetStatus);
-        CyFxAppErrorHandler (apiRetStatus);
-    }
-
-    /* SENSOR_RESET_GPIO is the Sensor reset pin */
-    gpioConfig.outValue    = CyTrue;
-    gpioConfig.driveLowEn  = CyTrue;
-    gpioConfig.driveHighEn = CyTrue;
-    gpioConfig.inputEn     = CyFalse;
-    gpioConfig.intrMode    = CY_U3P_GPIO_NO_INTR;
-    apiRetStatus           = CyU3PGpioSetSimpleConfig (SENSOR_RESET_GPIO, &gpioConfig);
-    if (apiRetStatus != CY_U3P_SUCCESS)
-    {
-        CyU3PDebugPrint (4, "GPIO Set Config Error, Error Code = %d\n", apiRetStatus);
-        CyFxAppErrorHandler (apiRetStatus);
-    }
-
     /* Initialize the P-port. */
     pibclock.clkDiv      = 2;
     pibclock.clkSrc      = CY_U3P_SYS_CLK;
