@@ -513,8 +513,8 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x01,                           /* Still image capture method 1 supported, fixed frame rate */
         0xF0, 0x02,                     /* Width in pixel; Changed by GL */
         0xE0, 0x01,                     /* Height in pixel; Changed by GL */
-        0x00,0xC0,0x53,0x0A,            /* Min bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
-        0x00,0xC0,0x53,0x0A,            /* Max bit rate bits/s. Not specified, taken from MJPEG; Changed by GL */
+        0x53,0xDD,0x53,0x0A,            /* Min bit rate bits/s. Not specified, taken from MJPEG; Changed by JRS */
+        0x53,0xDD,0x53,0x0A,            /* Max bit rate bits/s. Not specified, taken from MJPEG; Changed by JRS */
         0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated) */
         0x07, 0x16, 0x05, 0x00,         /* Default Frame Interval: 30 FPS, Changed by JRS */
         0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
@@ -857,8 +857,8 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x01,                           /* Still image capture method 1 supported, fixed frame rate */
         0xF0, 0x02,                     /* Width in pixel; Changed by GL */
         0xE0, 0x01,                     /* Height in pixel; Changed by GL */
-        0x00,0xC0,0x53,0x0A,            /* Min bit rate bits/s; Changed by GL. */
-        0x00,0xC0,0x53,0x0A,            /* Max bit rate bits/s; Changed by GL. */
+        0x53,0xDD,0x53,0x0A,            /* Min bit rate bits/s; Changed by JRS. */
+        0x53,0xDD,0x53,0x0A,            /* Max bit rate bits/s; Changed by JRS. */
         0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated); Changed by GL. */
         0x07, 0x16, 0x05, 0x00,         /* Default Frame Interval: 30 FPS, changed by JRS*/
         0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
