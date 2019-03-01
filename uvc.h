@@ -77,13 +77,13 @@
 #define CY_FX_EP_BULK_VIDEO_PKTS_COUNT  (0x10)          /* 16 packets (burst of 16) per DMA buffer. */
 
 /* DMA buffer size used for video streaming. */
-#define CY_FX_UVC_STREAM_BUF_SIZE       (0x9000)  /* 16 KB */
+#define CY_FX_UVC_STREAM_BUF_SIZE       (0xC000)  /* 16 KB, 0x9000 for 36KB, changed by JRS*/
 
 /* Maximum video data that can be accommodated in one DMA buffer. */
 #define CY_FX_UVC_BUF_FULL_SIZE         (CY_FX_UVC_STREAM_BUF_SIZE - 16)
 
 /* Number of DMA buffers per GPIF DMA thread. */
-#define CY_FX_UVC_STREAM_BUF_COUNT      (3)
+#define CY_FX_UVC_STREAM_BUF_COUNT      (2) /* changed from 4 by JRS*/
 
 /* Low Byte - UVC Video Streaming Endpoint Packet Size */
 #define CY_FX_EP_BULK_VIDEO_PKT_SIZE_L  (uint8_t)(CY_FX_EP_BULK_VIDEO_PKT_SIZE & 0x00FF)

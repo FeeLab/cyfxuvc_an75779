@@ -149,7 +149,7 @@ uint8_t glProbeCtrl[CY_FX_UVC_MAX_PROBE_SETTING] = {
                                    streaming with adjustable compression parameters */
     0x00, 0x00,                 /* Internal video streaming i/f latency in ms */
     0x00, 0x04, 0x0B, 0x00,     /* Max video frame size in bytes; Changed by GL */
-    0x00, 0x90, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB, 0x9000 for 36KB, changed by JRS */
+    0x00, 0xC0, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB, 0x9000 for 36KB, changed by JRS */
 
 #ifndef FX3_UVC_1_0_SUPPORT
     /* UVC 1.1 Probe Control has additional fields from UVC 1.0 */
@@ -177,7 +177,7 @@ uint8_t glProbeCtrl20[CY_FX_UVC_MAX_PROBE_SETTING] = {
                                    streaming with adjustable compression parameters */
     0x00, 0x00,                 /* Internal video streaming i/f latency in ms */
     0x00, 0x04, 0x0B, 0x00,     /* Max video frame size in bytes */
-    0x00, 0x40, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB */
+    0x00, 0xC0, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB */
 
 #ifndef FX3_UVC_1_0_SUPPORT
     /* UVC 1.1 Probe Control has additional fields from UVC 1.0 */
