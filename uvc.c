@@ -149,7 +149,7 @@ uint8_t glProbeCtrl[CY_FX_UVC_MAX_PROBE_SETTING] = {
                                    streaming with adjustable compression parameters */
     0x00, 0x00,                 /* Internal video streaming i/f latency in ms */
     0x00, 0x04, 0x0B, 0x00,     /* Max video frame size in bytes; Changed by GL */
-    0x00, 0x40, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB */
+    0x00, 0x90, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB, 0x9000 for 36KB, changed by JRS */
 
 #ifndef FX3_UVC_1_0_SUPPORT
     /* UVC 1.1 Probe Control has additional fields from UVC 1.0 */
@@ -594,7 +594,7 @@ CyFxUVCApplnDebugInit (
     }
 
     /* Set UART Configuration */
-    uartConfig.baudRate = CY_U3P_UART_BAUDRATE_57600;
+    uartConfig.baudRate = CY_U3P_UART_BAUDRATE_19200;
     uartConfig.stopBit  = CY_U3P_UART_ONE_STOP_BIT;
     uartConfig.parity   = CY_U3P_UART_NO_PARITY;
     uartConfig.txEnable = CyTrue;
@@ -990,7 +990,7 @@ CyFxUvcApplnStart()
     if (CyU3PUsbGetSpeed () == CY_U3P_SUPER_SPEED)
     {
         CyU3PUsbSetLinkPowerState (CyU3PUsbLPM_U0);
-        CyU3PBusyWait (200);
+        CyU3PBusyWait (200); /*in microseconds, originally 200 */
     }
     else
     {
@@ -999,7 +999,7 @@ CyFxUvcApplnStart()
 
     /* Place the EP in NAK mode before cleaning up the pipe. */
     CyU3PUsbSetEpNak (CY_FX_EP_BULK_VIDEO, CyTrue);
-    CyU3PBusyWait (125);
+    CyU3PBusyWait (125); /*in microseconds, originally 125 */
 
     /* Reset and flush the endpoint pipe. */
     CyU3PUsbFlushEp (CY_FX_EP_BULK_VIDEO);
@@ -1015,7 +1015,7 @@ CyFxUvcApplnStart()
     }
 
     CyU3PUsbSetEpNak (CY_FX_EP_BULK_VIDEO, CyFalse);
-    CyU3PBusyWait (125);
+    CyU3PBusyWait (125); /*in microseconds, originally 125 */
 
 #ifdef FRAME_TIMER_ENABLE
     /* Start the frame timer so that we receive first buffer on time */
