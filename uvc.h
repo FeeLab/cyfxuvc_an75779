@@ -34,7 +34,7 @@
 /* #define BACKFLOW_DETECT */           /* Enable if buffer overflow conditions are to be detected. */
 #define DEBUG_PRINT_FRAME_COUNT */   /* Enable UART debug prints to print the frame count every end of frame */
 /* #define USB_DEBUG_INTERFACE */       /* Enable custom USB interface for sensor interface debugging. */
-#define FX3_UVC_1_0_SUPPORT */       /* Enable to run as UVC 1.0 device. Default is UVC 1.1 device */
+/* #define FX3_UVC_1_0_SUPPORT */       /* Enable to run as UVC 1.0 device. Default is UVC 1.1 device */
 /* #define UVC_EXTENSION_UNIT */        /* Enable to add a sample UVC extension unit that communicates with
                                          * the host application associated with this firmware */
 #define FRAME_TIMER_ENABLE              /* Enable/Disable a timer that aborts an ongoing frame and restarts streaming
@@ -77,13 +77,13 @@
 #define CY_FX_EP_BULK_VIDEO_PKTS_COUNT  (0x10)          /* 16 packets (burst of 16) per DMA buffer. */
 
 /* DMA buffer size used for video streaming. */
-#define CY_FX_UVC_STREAM_BUF_SIZE       (CY_FX_EP_BULK_VIDEO_PKTS_COUNT * CY_FX_EP_BULK_VIDEO_PKT_SIZE)  /* 16 KB */
+#define CY_FX_UVC_STREAM_BUF_SIZE       (0x9000)  /* 16 KB */
 
 /* Maximum video data that can be accommodated in one DMA buffer. */
 #define CY_FX_UVC_BUF_FULL_SIZE         (CY_FX_UVC_STREAM_BUF_SIZE - 16)
 
 /* Number of DMA buffers per GPIF DMA thread. */
-#define CY_FX_UVC_STREAM_BUF_COUNT      (4)
+#define CY_FX_UVC_STREAM_BUF_COUNT      (3)
 
 /* Low Byte - UVC Video Streaming Endpoint Packet Size */
 #define CY_FX_EP_BULK_VIDEO_PKT_SIZE_L  (uint8_t)(CY_FX_EP_BULK_VIDEO_PKT_SIZE & 0x00FF)
