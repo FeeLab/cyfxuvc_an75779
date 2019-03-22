@@ -124,7 +124,7 @@ SensorInit (
     }
 
     Sensor_Configure_EV76C541 (); /* Configure EV76C541 */
-    SensorSetCompression (0x92);
+    SensorSetCompression (0x00);
     /* Update sensor configuration based on desired video stream parameters.
      * Using 752x480 at 30fps as default setting.
      */
