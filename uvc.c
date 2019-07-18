@@ -748,6 +748,7 @@ CyFxUVCApplnInit (void)
     SensorInit ();
     SensorGetFeedback ();
     LedSetBrightness (0x00);
+    AdcStart(CyTrue, REG_ADC_PERIOD_DEFAULT_MSB, REG_ADC_PERIOD_DEFAULT_LSB);
 
     /* USB initialization. */
     apiRetStatus = CyU3PUsbStart ();
