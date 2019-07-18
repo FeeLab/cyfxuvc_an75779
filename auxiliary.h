@@ -30,21 +30,6 @@ LedSetBrightness (
         uint8_t brightness);
 
 /*
-<<<<<<< HEAD
-   Start sampling from the ADC.
- */
-void
-AdcStart(
-		CyBool_t adc_multiplex,
-		uint8_t adc_period_msb,
-		uint8_t adc_period_lsb);
-
-/*
-   Stop sampling from the ADC.
- */
-void
-AdcStop(void);
-=======
    Function    : ScopeAdcStart
    Description : Starting taking and transmitting ADC reads from scope
    Parameters  :
@@ -73,6 +58,5 @@ ScopeGetAdcPeriod (
 extern void
 ScopeAdcStop (
         void);
->>>>>>> d1fd91c5c798fff6a485ec704121b1b96064d214
 
 #endif /* AUXILIARY_H_ */
