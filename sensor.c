@@ -37,6 +37,7 @@
 #include <cyu3gpio.h>
 #include <cyu3utils.h>
 #include "sensor.h"
+#include "util.h"
 #include "appi2c.h"
 
 #define CONFIRM_TRIES      5
@@ -65,22 +66,6 @@
 static uint16_t exposureMaxLL = 0x0000; // Max exposure for this frame rate in number of lines
 
 static void Sensor_Configure_EV76C541 (void);
-
-static void
-FillBuff2B (
-		uint16_t input,
-		uint8_t *buf)
-{
-	buf[0] = (uint8_t) ((input & 0xFF00) >> 8);
-	buf[1] = (uint8_t) (input & 0x00FF);
-}
-
-static uint16_t
-Combine2B (
-		uint8_t *buf)
-{
-	return ((uint16_t) buf[0] << 8) | buf[1];
-}
 
 /*
  * Reset the EV76C541 sensor using GPIO.
