@@ -551,7 +551,7 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         CY_U3P_USB_EP_BULK,             /* Bulk endpoint type */
         0x00,0x02,                      /* Max packet size = 512 bytes */
         0x00,                           /* Servicing interval for data transfers : 0 for bulk */
-    
+
         /* Endpoint descriptor for consumer EP */
         0x07,                           /* Descriptor size */
         CY_U3P_USB_ENDPNT_DESCR,        /* Endpoint descriptor type */
@@ -903,14 +903,14 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         CY_U3P_USB_EP_BULK,             /* Bulk endpoint type */
         0x00,0x04,                      /* Max packet size = 1024 bytes */
         0x00,                           /* Servicing interval for data transfers : 0 for bulk */
-    
+
         /* Super speed endpoint companion descriptor for producer EP */
         0x06,                           /* Descriptor size */
         CY_U3P_SS_EP_COMPN_DESCR,       /* SS endpoint companion descriptor type */
         0,                              /* No burst support. */
         0x00,                           /* Max streams for bulk EP = 0 (No streams) */
         0x00,0x00,                      /* Service interval for the EP : 0 for bulk */
-    
+
         /* Endpoint descriptor for consumer EP */
         0x07,                           /* Descriptor size */
         CY_U3P_USB_ENDPNT_DESCR,        /* Endpoint descriptor type */
@@ -918,7 +918,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         CY_U3P_USB_EP_BULK,             /* Bulk endpoint type */
         0x00,0x04,                      /* Max packet size = 1024 bytes */
         0x00,                           /* Servicing interval for data transfers : 0 for Bulk */
-    
+
         /* Super speed endpoint companion descriptor for consumer EP */
         0x06,                           /* Descriptor size */
         CY_U3P_SS_EP_COMPN_DESCR,       /* SS endpoint companion descriptor type */
@@ -965,4 +965,3 @@ const uint8_t CyFxUSBProductDscr[] =
         'p',0x00,
         'e',0x00
     };
-
