@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "appi2c.h"
 #include "app_error_handler.h"
+#include "util.h"
 
 #define NRETRY 5
 
@@ -37,40 +38,40 @@ CyFxUVCApplnI2CInit (void)
 
 static CyU3PReturnStatus_t
 RobustI2cTramsmitBytes (
-		CyU3PI2cPreamble_t  *preamble,
-		uint8_t *data,
-		uint32_t count,
-		uint32_t retryCount)
+    CyU3PI2cPreamble_t  *preamble,
+    uint8_t *data,
+    uint32_t count,
+    uint32_t retryCount)
 {
-	CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
-	uint32_t attempts = 1;
-	apiRetStatus = CyU3PI2cTransmitBytes (preamble, data, count, 0);
-	while (apiRetStatus != CY_U3P_SUCCESS && attempts <= retryCount) {
-		CyU3PI2cDeInit ();
-		CyFxUVCApplnI2CInit ();
-		apiRetStatus = CyU3PI2cTransmitBytes (preamble, data, count, 0);
-		attempts++;
-	}
-	return apiRetStatus;
+  CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
+  uint32_t attempts = 1;
+  apiRetStatus = CyU3PI2cTransmitBytes (preamble, data, count, 0);
+  while (apiRetStatus != CY_U3P_SUCCESS && attempts <= retryCount) {
+    CyU3PI2cDeInit ();
+    CyFxUVCApplnI2CInit ();
+    apiRetStatus = CyU3PI2cTransmitBytes (preamble, data, count, 0);
+    attempts++;
+  }
+  return apiRetStatus;
 }
 
 static CyU3PReturnStatus_t
 RobustI2cReceiveBytes (
-		CyU3PI2cPreamble_t  *preamble,
-		uint8_t *data,
-		uint32_t count,
-		uint32_t retryCount)
+    CyU3PI2cPreamble_t  *preamble,
+    uint8_t *data,
+    uint32_t count,
+    uint32_t retryCount)
 {
-	CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
-	uint32_t attempts = 1;
-	apiRetStatus = CyU3PI2cReceiveBytes (preamble, data, count, 0);
-	while (apiRetStatus != CY_U3P_SUCCESS && attempts <= retryCount) {
-		CyU3PI2cDeInit ();
-		CyFxUVCApplnI2CInit ();
-		apiRetStatus = CyU3PI2cReceiveBytes (preamble, data, count, 0);
-		attempts++;
-	}
-	return apiRetStatus;
+  CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
+  uint32_t attempts = 1;
+  apiRetStatus = CyU3PI2cReceiveBytes (preamble, data, count, 0);
+  while (apiRetStatus != CY_U3P_SUCCESS && attempts <= retryCount) {
+    CyU3PI2cDeInit ();
+    CyFxUVCApplnI2CInit ();
+    apiRetStatus = CyU3PI2cReceiveBytes (preamble, data, count, 0);
+    attempts++;
+  }
+  return apiRetStatus;
 }
 
 /* This function inserts a delay between successful I2C transfers to prevent
@@ -89,30 +90,30 @@ AppI2CAccessDelay (
 
 CyU3PReturnStatus_t
 I2CWriteConfirm2B (
-		uint8_t slaveAddr,
-		uint8_t regAddr,
-		uint8_t highData,
-		uint8_t lowData,
-		uint32_t retryCount)
+    uint8_t slaveAddr,
+    uint8_t regAddr,
+    uint8_t highData,
+    uint8_t lowData,
+    uint32_t retryCount)
 {
-	CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
-	uint8_t readbuf[2];
-	uint32_t attempts = 0;
-	bool mismatch = false;
-	do {
-		apiRetStatus = I2CWrite2B (slaveAddr, regAddr, highData, lowData);
-		if (apiRetStatus == CY_U3P_SUCCESS) {
-			mismatch = false;
-			I2CRead2B (slaveAddr | ~I2C_SLAVEADDR_MASK, regAddr, readbuf);
-			mismatch = mismatch || readbuf[0] != highData;
-			mismatch = mismatch || readbuf[1] != lowData;
-		}
-		attempts++;
-	} while (attempts <= retryCount && apiRetStatus == CY_U3P_SUCCESS && mismatch);
-	if (apiRetStatus == CY_U3P_SUCCESS && mismatch) {
-		apiRetStatus = CY_U3P_ERROR_TIMEOUT;
-	}
-	return apiRetStatus;
+  CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
+  uint8_t readbuf[2];
+  uint32_t attempts = 0;
+  bool mismatch = false;
+  do {
+    apiRetStatus = I2CWrite2B (slaveAddr, regAddr, highData, lowData);
+    if (apiRetStatus == CY_U3P_SUCCESS) {
+      mismatch = false;
+      I2CRead2B (slaveAddr | ~I2C_SLAVEADDR_MASK, regAddr, readbuf);
+      mismatch = mismatch || readbuf[0] != highData;
+      mismatch = mismatch || readbuf[1] != lowData;
+    }
+    attempts++;
+  } while (attempts <= retryCount && apiRetStatus == CY_U3P_SUCCESS && mismatch);
+  if (apiRetStatus == CY_U3P_SUCCESS && mismatch) {
+    apiRetStatus = CY_U3P_ERROR_TIMEOUT;
+  }
+  return apiRetStatus;
 }
 
 /* Write to an I2C slave with two bytes of data. */
@@ -191,6 +192,78 @@ I2CWrite (
     AppI2CAccessDelay (apiRetStatus);
 
     return apiRetStatus;
+}
+
+CyU3PReturnStatus_t
+I2CSensorWrite (
+          uint8_t slaveAddr,
+          uint16_t regAddr,
+          uint16_t regValue)
+{
+    CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
+    CyU3PI2cPreamble_t preamble;
+    uint8_t buf[2];
+
+       /* Set up the I2C control parameters and invoke the write API. */
+    preamble.buffer[0] = slaveAddr;
+    preamble.buffer[1] = regAddr >> 8;
+    preamble.buffer[2] = regAddr;
+    preamble.length    = 3;
+    preamble.ctrlMask  = 0x0000;
+
+    FillBuff2B(regValue, buf);
+    apiRetStatus = RobustI2cTramsmitBytes (&preamble, buf, 2, NRETRY);
+    AppI2CAccessDelay (apiRetStatus);
+
+    return apiRetStatus;
+}
+
+void
+I2CSensorConditionalWrite (
+                CyU3PReturnStatus_t *apiRetStatus,
+                uint8_t slaveAddr,
+                uint16_t regAddr,
+                uint16_t regValue)
+{
+    if (*apiRetStatus == CY_U3P_SUCCESS) {
+        *apiRetStatus = I2CSensorWrite (slaveAddr, regAddr, regValue);
+    }
+}
+
+CyU3PReturnStatus_t
+I2CSensorRead (
+           uint8_t slaveAddr,
+           uint16_t regAddr,
+           uint16_t *buf)
+{
+    CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
+    uint8_t readbuf[2];
+    CyU3PI2cPreamble_t preamble;
+
+    preamble.buffer[0] = slaveAddr & I2C_SLAVEADDR_MASK;        /*  Mask out the transfer type bit. */
+    preamble.buffer[1] = regAddr >> 8;
+    preamble.buffer[2] = regAddr;
+    preamble.buffer[3] = slaveAddr;
+    preamble.length    = 4;
+    preamble.ctrlMask  = 0x0004;                                /*  Send start bit after third byte of preamble. */
+
+    apiRetStatus = RobustI2cReceiveBytes (&preamble, readbuf, 2, NRETRY);
+    *buf = Combine2B (readbuf);
+    AppI2CAccessDelay (apiRetStatus);
+
+    return apiRetStatus;
+}
+
+void
+I2CSensorConditionalRead (
+               CyU3PReturnStatus_t *apiRetStatus,
+               uint8_t slaveAddr,
+               uint16_t regAddr,
+               uint16_t *buf)
+{
+    if (*apiRetStatus == CY_U3P_SUCCESS) {
+        *apiRetStatus = I2CSensorRead(slaveAddr, regAddr, buf);
+    }
 }
 
 CyU3PReturnStatus_t

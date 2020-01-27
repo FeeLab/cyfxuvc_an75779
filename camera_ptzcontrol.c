@@ -93,4 +93,3 @@ CyFxUvcAppModifyZoom (
 }
 
 #endif
-

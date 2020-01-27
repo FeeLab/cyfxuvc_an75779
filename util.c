@@ -8,9 +8,14 @@
 
 extern inline void
 FillBuff2B (
-		uint16_t input,
-		uint8_t *buf);
+    uint16_t input,
+    uint8_t *buf);
+
+extern inline void
+FillBuff2BLsb (
+            uint16_t input,
+            uint8_t *buf);
 
 extern inline uint16_t
 Combine2B (
-		uint8_t *buf);
+    uint8_t *buf);

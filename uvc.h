@@ -32,7 +32,7 @@
 /* Definitions to enable/disable special features in this UVC application. */
 /* #define UVC_PTZ_SUPPORT */           /* Enable if Pan, Tilt and Zoom controls are to be implemented. */
 /* #define BACKFLOW_DETECT */           /* Enable if buffer overflow conditions are to be detected. */
-/* #define DEBUG_PRINT_FRAME_COUNT */   /* Enable UART debug prints to print the frame count every end of frame */
+ #define DEBUG_PRINT_FRAME_COUNT          /* Enable UART debug prints to print the frame count every end of frame */
 /* #define USB_DEBUG_INTERFACE */       /* Enable custom USB interface for sensor interface debugging. */
 /* #define FX3_UVC_1_0_SUPPORT */       /* Enable to run as UVC 1.0 device. Default is UVC 1.1 device */
 /* #define UVC_EXTENSION_UNIT */        /* Enable to add a sample UVC extension unit that communicates with
@@ -77,13 +77,13 @@
 #define CY_FX_EP_BULK_VIDEO_PKTS_COUNT  (0x10)          /* 16 packets (burst of 16) per DMA buffer. */
 
 /* DMA buffer size used for video streaming. */
-#define CY_FX_UVC_STREAM_BUF_SIZE       (0xC000)  /* 16 KB, 0x9000 for 36KB, changed by JRS*/
+#define CY_FX_UVC_STREAM_BUF_SIZE       (CY_FX_EP_BULK_VIDEO_PKTS_COUNT * CY_FX_EP_BULK_VIDEO_PKT_SIZE)  /* 16 KB, 0x9000 for 36KB, changed by JRS*/
 
 /* Maximum video data that can be accommodated in one DMA buffer. */
 #define CY_FX_UVC_BUF_FULL_SIZE         (CY_FX_UVC_STREAM_BUF_SIZE - 16)
 
 /* Number of DMA buffers per GPIF DMA thread. */
-#define CY_FX_UVC_STREAM_BUF_COUNT      (2) /* changed from 4 by JRS*/
+#define CY_FX_UVC_STREAM_BUF_COUNT      (4) /* changed from 4 by JRS*/
 
 /* Low Byte - UVC Video Streaming Endpoint Packet Size */
 #define CY_FX_EP_BULK_VIDEO_PKT_SIZE_L  (uint8_t)(CY_FX_EP_BULK_VIDEO_PKT_SIZE & 0x00FF)
@@ -255,6 +255,39 @@
 #define CY_FX_UVC_VC_ERROR_CODE_INVALID_VAL_IN_RANGE        (0x08)
 #define CY_FX_UVC_VC_ERROR_CODE_UNKNOWN                     (0xFF)
 
+#define PYTHON480_X_LENGTH            0x28, 0x03
+#define PYTHON480_Y_LENGTH            0x60, 0x02
+#define PYTHON480_X_RATIO             0x65
+#define PYTHON480_Y_RATIO             0x4C
+
+#define PYTHON480_FRAMESIZE_BYTES     0x00, 0xFE, 0x0E, 0x00
+
+
+#define YUY2_GUID                     0x59,0x55,0x59,0x32, \
+                                      0x00,0x00,0x10,0x00, \
+                                      0x80,0x00,0x00,0xAA, \
+                                      0x00,0x38,0x9B,0x71
+
+#define RGB565_GUID                   0x7B,0xEB,0x36,0xE4, \
+                                      0x4F,0x52,0xCE,0x11, \
+                                      0x9F,0x53,0x00,0x20, \
+                                      0xAF,0x0B,0xA7,0x70
+
+#define PYTHON480_BM_CONTROLS         0x08,0x02,0x00
+
+#ifdef PLL_BYPASS
+
+#define PYTHON480_BITRATE_30FPS       0x9C, 0x47, 0x0E, 0x0E
+#define INTERVAL_30FPS_100NS_MULTIPLE 0x07, 0x16, 0x05, 0x00
+
+#else
+
+#define PYTHON480_BITRATE_30FPS       0x00, 0x20, 0x0E, 0x0E
+#define INTERVAL_30FPS_100NS_MULTIPLE 0x15, 0x16, 0x05, 0x00
+
+#endif
+
+
 /* Enum for a DMA reset event */
 typedef enum CyFxUvcDmaResetVal
 {
@@ -294,4 +327,3 @@ extern const uint8_t CyFxUSBProductDscr[];              /* Product string descri
 #endif /* _INCLUDED_CYFXUVCAPP_H_ */
 
 /*[]*/
-

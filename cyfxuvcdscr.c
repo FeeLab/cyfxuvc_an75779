@@ -31,6 +31,7 @@
 
 #include "uvc.h"
 #include "camera_ptzcontrol.h"
+// #define USE_YUY2_FORMAT
 
 /* Standard Device Descriptor */
 const uint8_t CyFxUSBDeviceDscr[] =
@@ -42,8 +43,8 @@ const uint8_t CyFxUSBDeviceDscr[] =
         0x02,                           /* Device Sub-class */
         0x01,                           /* Device protocol */
         0x40,                           /* Maxpacket size for EP0 : 64 bytes */
-        0xB4,0x04,                      /* Vendor ID 0xB4, 0xB4*/
-        0xFA,0x01,                      /* Product ID 0xF8, 0x01*/
+        0xB4,0x04,                      /* Vendor ID 0xB4, 0x04*/
+        0xF8,0x01,                      /* Product ID 0xF8, 0x01*/
         0x00,0x00,                      /* Device release number */
         0x01,                           /* Manufacture string index */
         0x02,                           /* Product string index */
@@ -61,8 +62,8 @@ const uint8_t CyFxUSBDeviceDscrSS[] =
         0x02,                           /* Device Sub-class */
         0x01,                           /* Device protocol */
         0x09,                           /* Maxpacket size for EP0 : 2^9 Bytes */
-        0xB4,0x04,                      /* Vendor ID 0xB4, 0xB4*/
-        0xFB,0x03,                      /* Product ID 0xF9, 0x01*/
+        0xB4,0x04,                      /* Vendor ID 0xB4, 0x04*/
+        0xF9,0x03,                      /* Product ID 0xF9, 0x01*/
         0x00,0x00,                      /* Device release number */
         0x01,                           /* Manufacture string index */
         0x02,                           /* Product string index */
@@ -391,12 +392,12 @@ const uint8_t CyFxUSBHSConfigDscr[] =
                                          * D18: Contrast, Auto
                                          * D19 – D23: Reserved. Set to zero.
                                          */
-        0x0B,0x02,0x00,                 /* bmControls field of processing unit:
-         	 	 	 	 	 	 	 	 * Brightness control supported: changes exposure
-         	 	 	 	 	 	 	 	 * Saturation control supported: other commands to DAQ board
-         	 	 	 	 	 	 	 	 * Gain control supported: analog gain to pixel readings
+        PYTHON480_BM_CONTROLS,                 /* bmControls field of processing unit:
+                         * Brightness control supported: changes exposure
+                         * Saturation control supported: other commands to DAQ board
+                         * Gain control supported: analog gain to pixel readings
                          * Changed by GL
-         	 	 	 	 	 	 	 	 */
+                         */
         0x00,                           /* String desc index : Not used */
 #ifndef FX3_UVC_1_0_SUPPORT
         0x00,                           /* Analog Video Standards Supported: None */
@@ -494,17 +495,23 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x04,                           /* Subtype : uncompressed format I/F */
         0x01,                           /* Format desciptor index (only one format is supported) */
         0x01,                           /* number of frame descriptor followed */
-        0x7B,0xEB,0x36,0xE4,             /*MEDIASUBTYPE_RGB565 GUID: E436EB7B-524F-11CE-9F53-0020AF0BA770  */
-        0x4F,0x52,0xCE,0x11,
-        0x9F,0x53,0x00,0x20,
-        0xAF,0x0B,0xA7,0x70,
+
+#ifdef USE_YUY2_FORMAT
+        /* GFL: changed pixel encoding back to YUY2 for debugging
+         * GUID used to identify streaming-encoding format: YUY2
+         */
+        YUY2_GUID,
+#else
+        /* MEDIASUBTYPE_RGB565 GUID: E436EB7B-524F-11CE-9F53-0020AF0BA770 */
+        RGB565_GUID,
+#endif
+
+
         0x10,                           /* Number of bits per pixel used to specify color in the decoded video frame.
                                            0 if not applicable: 16 bit per pixel */
         0x01,                           /* Optimum Frame Index for this stream: 1 */
-        0x2F,                           /* X dimension of the picture aspect ratio: Non-interlaced in
-			        	   progressive scan; Changed by GL */
-        0x1E,                           /* Y dimension of the picture aspect ratio: Non-interlaced in
-					   progressive scan; Changed by GL*/
+        PYTHON480_X_RATIO,                           /* X dimension of the picture aspect ratio; Non-interlaced; Changed by GL*/
+        PYTHON480_Y_RATIO,                           /* Y dimension of the pictuer aspect ratio: Non-interlaced; Changed by GL*/
         0x00,                           /* Interlace Flags: Progressive scanning, no interlace */
         0x00,                           /* duplication of the video stream restriction: 0 - no restriction */
 
@@ -514,14 +521,14 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x05,                           /* Subtype: uncompressed frame I/F */
         0x01,                           /* Frame Descriptor Index */
         0x01,                           /* Still image capture method 1 supported, fixed frame rate */
-        0xF0, 0x02,                     /* Width in pixel; Changed by GL */
-        0xE0, 0x01,                     /* Height in pixel; Changed by GL */
-        0x53,0xDD,0x53,0x0A,            /* Min bit rate bits/s. Not specified, taken from MJPEG; Changed by JRS */
-        0x53,0xDD,0x53,0x0A,            /* Max bit rate bits/s. Not specified, taken from MJPEG; Changed by JRS */
-        0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated) */
-        0x07, 0x16, 0x05, 0x00,         /* Default Frame Interval: 30 FPS, Changed by JRS */
+        PYTHON480_X_LENGTH,                     /* Width in pixel; Changed by GL */
+        PYTHON480_Y_LENGTH,                     /* Height in pixel; Changed by GL */
+        PYTHON480_BITRATE_30FPS,            /* Min bit rate bits/s. Not specified, taken from MJPEG; */
+        PYTHON480_BITRATE_30FPS,            /* Max bit rate bits/s. Not specified, taken from MJPEG; */
+        PYTHON480_FRAMESIZE_BYTES,      /* Maximum video or still frame size in bytes(Deprecated) */
+        INTERVAL_30FPS_100NS_MULTIPLE,  /* Default Frame Interval: 30 FPS, Changed by JRS */
         0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-        0x07, 0x16, 0x05, 0x00,         /* Shortest Frame Interval, Changed by JRS */
+        INTERVAL_30FPS_100NS_MULTIPLE,         /* Shortest Frame Interval, Changed by JRS */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */
@@ -728,13 +735,13 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x01,                           /* Source ID : 1 : Connected to input terminal */
         0x00,0x40,                      /* Digital multiplier */
         0x03,                           /* Size of controls field for this terminal : 3 bytes */
-        0x0B,0x02,0x00,                 /* bmControls field of processing unit:
-										 * Brightness control supported: changes exposure
-										 * Hue control supported: changes LED brightness
-										 * Saturation control supported: other commands to DAQ board
-										 * Gain control supported: analog gain to pixel readings
+        PYTHON480_BM_CONTROLS,          /* bmControls field of processing unit:
+                     * Brightness control supported: changes exposure
+                     * Hue control supported: changes LED brightness
+                     * Saturation control supported: other commands to DAQ board
+                     * Gain control supported: analog gain to pixel readings
                      * Changed by GL
-										 */
+                     */
         0x00,                           /* String desc index : Not used */
 #ifndef FX3_UVC_1_0_SUPPORT
         0x00,                           /* Analog Video Standards Supported: None */
@@ -841,14 +848,21 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x04,                           /* Subtype : uncompressed format I/F */
         0x01,                           /* Format desciptor index */
         0x01,                           /* Number of frame descriptor followed */
-        0x7B,0xEB,0x36,0xE4,             /*MEDIASUBTYPE_RGB565 GUID: E436EB7B-524F-11CE-9F53-0020AF0BA770  */
-        0x4F,0x52,0xCE,0x11,
-        0x9F,0x53,0x00,0x20,
-        0xAF,0x0B,0xA7,0x70,
+
+#ifdef USE_YUY2_FORMAT
+        /* GFL: changed pixel encoding back to YUY2 for debugging
+         * GUID used to identify streaming-encoding format: YUY2
+         */
+        YUY2_GUID,
+#else
+        /* MEDIASUBTYPE_RGB565 GUID: E436EB7B-524F-11CE-9F53-0020AF0BA770 */
+        RGB565_GUID,
+#endif
+
         0x10,                           /* Number of bits per pixel */
         0x01,                           /* Optimum Frame Index for this stream: 1 */
-        0x2F,                           /* X dimension of the picture aspect ratio; Non-interlaced; Changed by GL*/
-        0x1E,                           /* Y dimension of the pictuer aspect ratio: Non-interlaced; Changed by GL*/
+        PYTHON480_X_RATIO,                           /* X dimension of the picture aspect ratio; Non-interlaced; Changed by GL*/
+        PYTHON480_Y_RATIO,                           /* Y dimension of the pictuer aspect ratio: Non-interlaced; Changed by GL*/
         0x00,                           /* Interlace Flags: Progressive scanning, no interlace */
         0x00,                           /* duplication of the video stream restriction: 0 - no restriction */
 
@@ -858,14 +872,14 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x05,                           /* Subtype: uncompressed frame I/F */
         0x01,                           /* Frame Descriptor Index */
         0x01,                           /* Still image capture method 1 supported, fixed frame rate */
-        0xF0, 0x02,                     /* Width in pixel; Changed by GL */
-        0xE0, 0x01,                     /* Height in pixel; Changed by GL */
-        0x53,0xDD,0x53,0x0A,            /* Min bit rate bits/s; Changed by JRS. */
-        0x53,0xDD,0x53,0x0A,            /* Max bit rate bits/s; Changed by JRS. */
-        0x00,0x04,0x0B,0x00,            /* Maximum video or still frame size in bytes(Deprecated); Changed by GL. */
-        0x07, 0x16, 0x05, 0x00,         /* Default Frame Interval: 30 FPS, changed by JRS*/
+        PYTHON480_X_LENGTH,                     /* Width in pixel; Changed by GL */
+        PYTHON480_Y_LENGTH,                     /* Height in pixel; Changed by GL */
+        PYTHON480_BITRATE_30FPS,            /* Min bit rate bits/s. Not specified, taken from MJPEG; */
+        PYTHON480_BITRATE_30FPS,            /* Max bit rate bits/s. Not specified, taken from MJPEG; */
+        PYTHON480_FRAMESIZE_BYTES,      /* Maximum video or still frame size in bytes(Deprecated) */
+        INTERVAL_30FPS_100NS_MULTIPLE,  /* Default Frame Interval: 30 FPS, Changed by JRS */
         0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-        0x07, 0x16, 0x05, 0x00,         /* Shortest Frame Interval, changed by JRS */
+        INTERVAL_30FPS_100NS_MULTIPLE,         /* Shortest Frame Interval, Changed by JRS */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */

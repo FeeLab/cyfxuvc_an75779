@@ -93,4 +93,29 @@ I2CReadNoReg (
         uint8_t slaveAddr,
         uint8_t *buf);
 
+void
+I2CSensorConditionalWrite (
+                           CyU3PReturnStatus_t *apiRetStatus,
+                           uint8_t slaveAddr,
+                           uint16_t regAddr,
+                           uint16_t regValue);
+
+CyU3PReturnStatus_t
+I2CSensorWrite (
+                uint8_t slaveAddr,
+                uint16_t regAddr,
+                uint16_t regValue);
+
+CyU3PReturnStatus_t
+I2CSensorRead (
+               uint8_t slaveAddr,
+               uint16_t regAddr,
+               uint16_t *buf);
+
+void
+I2CSensorConditionalRead (
+                          CyU3PReturnStatus_t *apiRetStatus,
+                          uint8_t slaveAddr,
+                          uint16_t regAddr,
+                          uint16_t *buf);
 #endif

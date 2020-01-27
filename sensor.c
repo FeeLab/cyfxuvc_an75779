@@ -39,55 +39,59 @@
 #include "sensor.h"
 #include "util.h"
 #include "appi2c.h"
+#include "auxiliary.h"
 
 #define CONFIRM_TRIES      5
+
+#define PLL_BYPASS
 
 /* ATTiny20 registers */
 #define REG_ATTINY_INIT    0xFF
 
-/* E2V registers */
-#define SOFT_RESET         0x01
-#define ABORT_MBX          0x03
-#define REG_MISCEL1		   0x06
-#define REG_CTRL_CFG       0x0B // Has restricted registers!
-#define REG_T_FRAME_PERIOD 0x0C
-#define ROI1_T_INT_LL      0x0E
-#define ROI1_GAIN          0x11
-#define FB_STATUS          0x3E
-#define CHIP_ID            0x7F
-#define REG_FB_STATUS	   0x3E
+/* Python 480 registers */
+#define SENSOR_SOFT_RESET_ANALOG_VAL   0x0999
+#define SENSOR_CHIP_ID_VAL             0x5004
+#define SENSOR_SEQ_GEN_CONFIG_START    0x0001
+#define SENSOR_SEQ_GEN_CONFIG_STOP     0x0001
+#define SENSOR_ANALOG_GAIN_1X          0x00E1
+#define SENSOR_ANALOG_GAIN_2X          0x00E4
+#define SENSOR_ANALOG_GAIN_3_5X        0x0024
+#define SENSOR_SYNC_CONFIG_EXPS_SYNC   0x037A
+#define SENSOR_SYNC_CONFIG_EXPS_NOSYNC 0x0372
+#define SENSOR_ROI_X_CONFIG_FULL       0xC900 // assumes granularity is 4
+#define SENSOR_ROI_Y_CONFIG_FULL       0x9700
 
+#define SENSOR_30FPS_MULT_TIMER          1000
+
+#ifdef PLL_BYPASS
+#define SENSOR_30FPS_FR_LENGTH           547
+#define SENSOR_30FPS_MAX_EXPOSURE        546
+#else
+#define SENSOR_30FPS_FR_LENGTH          2214
+#define SENSOR_30FPS_MAX_EXPOSURE       2213
+#endif
+
+#define SENSOR_INITIAL_SETTING_ANALOG_GAIN SENSOR_ANALOG_GAIN_2X
 // Startup values
-#define MAX_OFFSET		   0x34 // Default max offset for REG_MISCEL1
-#define INITIAL_BRIGHTNESS 0xFF // 0x00 to 0xFF
-#define INITIAL_GAIN_BYTE  0x00 // See data sheet for details
 
-/* Global variables */
-static uint16_t exposureMaxLL = 0x0000; // Max exposure for this frame rate in number of lines
-
-static void Sensor_Configure_EV76C541 (void);
-
-/*
- * Reset the EV76C541 sensor using GPIO.
- */
-void
-SensorReset (
-        void)
+CyU3PReturnStatus_t
+SensorIsOn (
+            CyBool_t *isOn)
 {
-    uint8_t buf[1] = { 0x00 };
     CyU3PReturnStatus_t apiRetStatus;
-
-    /* Write to reset register to reset the sensor. */
-    apiRetStatus = I2CWrite (SENSOR_ADDR_WR, SOFT_RESET, 1, buf);
-    if (apiRetStatus != CY_U3P_SUCCESS)
-    {
-        CyU3PDebugPrint (4, "I2C Error, Error Code = %d\n", apiRetStatus);
-        return;
+    uint8_t sensor_ctrl_val = 0;
+    uint16_t sensor_reset_val = 0;
+    apiRetStatus = I2CRead (AUX_ADDR_RD, REG_SENSOR_CTRL, 1, &sensor_ctrl_val);
+    if (sensor_ctrl_val & SENSOR_CTRL_POWER_bm) {
+        I2CSensorConditionalRead (&apiRetStatus,
+                                  SENSOR_ADDR_RD,
+                                  SENSOR_REG_SOFT_RESET_ANALOG,
+                                  &sensor_reset_val);
+        if (apiRetStatus == CY_U3P_SUCCESS) {
+            *isOn = sensor_reset_val != SENSOR_SOFT_RESET_ANALOG_VAL;
+        }
     }
-
-    /* Wait for some time to allow proper reset. */
-    CyU3PThreadSleep (1);
-    return;
+    return apiRetStatus;
 }
 
 /* EV76C541 sensor initialization sequence.
@@ -98,188 +102,238 @@ SensorReset (
    Select Video Resolution
    SensorChangeConfig     : Update sensor configuration.
 */
-void
+CyU3PReturnStatus_t
 SensorInit (
         void)
 {
-    if (SensorI2cBusTest () != CY_U3P_SUCCESS)        /* Verify that the sensor is connected. */
-    {
-        CyU3PDebugPrint (4, "Error: Reading Sensor ID failed!\r\n");
-        return;
-    }
+    CyU3PReturnStatus_t apiRetStatus;
 
-    Sensor_Configure_EV76C541 (); /* Configure EV76C541 */
-    SensorSetCompression (0x00);
-    /* Update sensor configuration based on desired video stream parameters.
-     * Using 752x480 at 30fps as default setting.
-     */
-    SensorScaling_752_480_30fps ();
-    SensorSetBrightness (INITIAL_BRIGHTNESS);
-    SensorSetGain (INITIAL_GAIN_BYTE);
-    SensorStart ();
+    apiRetStatus = SensorConfigurePython480 (CyTrue, CyTrue);
+    if (apiRetStatus == CY_U3P_SUCCESS) {
+        CyU3PThreadSleep (150); // sleep for 111 ms
+        /* Update sensor configuration based on desired video stream parameters.
+         * Using 808x608 at 30fps as default setting.
+         */
+
+        apiRetStatus = SensorConfigureRoi1 ();
+        if (apiRetStatus == CY_U3P_SUCCESS) {
+            apiRetStatus = SensorScaling_808_608_30fps ();
+            if (apiRetStatus == CY_U3P_SUCCESS) {
+                apiRetStatus = SensorSetGain (SENSOR_INITIAL_SETTING_ANALOG_GAIN);
+            }
+        }
+    }
+    return apiRetStatus;
 }
 
-void
+CyU3PReturnStatus_t
 SensorStart (
              void)
 {
-    // Set control configuration to start running
-    // roi_video_en, roi_overlap_en, trig_rqst
-	I2CWriteConfirm2B (SENSOR_ADDR_WR, REG_CTRL_CFG, 0x00, 0x0E, CONFIRM_TRIES);
+    CyU3PReturnStatus_t apiRetStatus;
+    apiRetStatus = I2CSensorWrite (SENSOR_ADDR_WR,
+                                   SENSOR_REG_SEQ_GEN_CONFIG,
+                                   SENSOR_SEQ_GEN_CONFIG_START);
+    return apiRetStatus;
 }
 
-void
+CyU3PReturnStatus_t
 SensorStop (
             void)
 {
-    uint8_t buf[2];
-    I2CRead2B (SENSOR_ADDR_RD, REG_CTRL_CFG, buf);
-    I2CWrite2B (SENSOR_ADDR_WR, REG_CTRL_CFG, buf[0], buf[1] | 0x01);
-    I2CWrite (SENSOR_ADDR_WR, ABORT_MBX, 1, buf); // Any write will trigger an abort
+    CyU3PReturnStatus_t apiRetStatus;
+    apiRetStatus = I2CSensorWrite (SENSOR_ADDR_WR,
+                                   SENSOR_REG_SEQ_GEN_CONFIG,
+                                   SENSOR_SEQ_GEN_CONFIG_STOP);
+    return apiRetStatus;
+}
+
+CyU3PReturnStatus_t
+SensorDisable (
+             void)
+{
+    CyU3PReturnStatus_t apiRetStatus;
+    CyBool_t isOn = CyFalse;
+    apiRetStatus = SensorIsOn (&isOn);
+    if (apiRetStatus == CY_U3P_SUCCESS && isOn) {
+        apiRetStatus = SensorConfigurePython480 (CyFalse, CyFalse); // turn off sensor
+        if (apiRetStatus == CY_U3P_SUCCESS) {
+            CyU3PThreadSleep (20); // sleep for 20 ms to wait for power down
+        }
+    }
+    return apiRetStatus;
 }
 
 /*
  * Verify that the sensor can be accessed over the I2C bus from FX3.
  */
-uint8_t
-SensorI2cBusTest (
-        void)
+CyU3PReturnStatus_t
+SensorI2CBusTest (
+        CyBool_t *success)
 {
     /* The sensor ID register can be read here to verify sensor connectivity. */
-    uint8_t buf[2];
+    CyU3PReturnStatus_t apiRetStatus;
+    uint16_t chip_id = 0;
 
     /* Reading sensor ID */
-    if (I2CRead2B (SENSOR_ADDR_RD, CHIP_ID, buf) == CY_U3P_SUCCESS)
+    apiRetStatus = I2CSensorRead (SENSOR_ADDR_RD, SENSOR_REG_CHIP_ID, &chip_id);
+    if (apiRetStatus == CY_U3P_SUCCESS)
     {
-        if ((buf[0] == 0x0A) && (buf[1] == 0x00))
-        {
-            return CY_U3P_SUCCESS;
-        }
+        *success = chip_id == SENSOR_CHIP_ID_VAL;
     }
-    return 1;
+    return apiRetStatus;
 }
 
-/*
-   Initialize the EV76C541, leaning on the attiny20 heavily
-   for initialization. See the mscp_code repository for details of initialization.
-   Also refer to the EV76C541 sensor datasheet for details.
- */
-static void
-Sensor_Configure_EV76C541 (
-		void) //SPI configuration of sensor
+CyU3PReturnStatus_t
+SensorConfigureRoi1(
+            void)
 {
-    // Trigger attiny20 initialization of E2V... this will reset the E2V
-	I2CWriteNoReg (SENSOR_ADDR_WR, REG_ATTINY_INIT);
+    CyU3PReturnStatus_t apiRetStatus;
+
+    apiRetStatus =  I2CSensorWrite (SENSOR_ADDR_WR,
+                                    SENSOR_REG_ROI0_X_CONFIG,
+                                    SENSOR_ROI_X_CONFIG_FULL);
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_ROI0_Y_CONFIG,
+                               SENSOR_ROI_Y_CONFIG_FULL);
+    return apiRetStatus;
 }
 
 /*
    The procedure is adapted from Aptina's sensor initialization scripts. Please
    refer to the EV76C541 sensor datasheet for details.
  */
-void
-SensorScaling_752_480_30fps (
+CyU3PReturnStatus_t
+SensorScaling_808_608_30fps (
         void)
 {
+    CyU3PReturnStatus_t apiRetStatus;
+    uint16_t regvalue;
+    I2CSensorRead (SENSOR_ADDR_RD,
+        		SENSOR_REG_MULT_TIMER0,
+        		&regvalue
+        		);
+
+    I2CSensorRead (SENSOR_ADDR_RD,
+    		SENSOR_REG_FR_LENGTH0,
+    		&regvalue
+    		);
+
+    I2CSensorRead (SENSOR_ADDR_RD,
+        		SENSOR_REG_EXPOSURE0,
+        		&regvalue
+        		);
+    /* Stop updating image sensor until all values are written */
+    apiRetStatus =  I2CSensorWrite (SENSOR_ADDR_WR,
+                                    SENSOR_REG_SYNC_CONFIG,
+                                    SENSOR_SYNC_CONFIG_EXPS_NOSYNC);
+
     /*
        Video configuration
-       PLL is configured to run at 114.0 MHz
-       CLK_CTRL is PLL/2 = 57.0 MHz
-       Line length is h6E * 8 * period(CLK_CTRL) = 15.44 us
-       To achieve ~30fps therefore requires d2166 (h0876) lines
-	 */
-	I2CWrite2B (SENSOR_ADDR_WR, REG_T_FRAME_PERIOD, 0x08, 0x6F);
+       Oscillator frequency is 66.66 MHz, period 15 ns
+       PLL is enabled at 4x osc frequency, 266.66 MHz and 4 ns
+       set mult_timer to 1000 to get period of 4 us for timing registers
+       The actual frame length and exposure length was calculated using the ON
+       semi exposure calculator
+    */
 
-	/*
-	   ROI1 int time
-	   Should be one less than reg_t_frame
-	   h0875 = d2165 Int time in number of lines.
-	   2165 lines at 57.2 MHz clock should get us 30FPS
-	 */
-	I2CWrite2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, 0x08, 0x6E);
-	exposureMaxLL = 0x086E;
-}
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_MULT_TIMER0,
+                               SENSOR_30FPS_MULT_TIMER);
 
-uint16_t
-SensorGetFeedback (
-		void)
-{
-	uint8_t buf[2];
-	I2CRead2B (SENSOR_ADDR_RD, REG_FB_STATUS, buf);
-	return Combine2B(buf);
-}
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_FR_LENGTH0,
+                               SENSOR_30FPS_FR_LENGTH);
 
-/*
-   Get the current brightness setting from the EV76C541 sensor.
- */
-uint8_t
-SensorGetBrightness ( // FIXME
-        void)
-{
-	uint32_t temp;
-	uint8_t buf[2];
-	I2CRead2B (SENSOR_ADDR_WR, ROI1_T_INT_LL, buf);
-	temp = 255 * Combine2B (buf);
-    return temp / exposureMaxLL;
-}
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_EXPOSURE0,
+                               SENSOR_30FPS_MAX_EXPOSURE);
 
-/*
-   Update the brightness setting for the EV76C541 sensor.
- */
-void
-SensorSetBrightness (
-        uint8_t input)
-{
-	uint32_t temp;
-	uint16_t exposureCurLL;
-	uint8_t buf[2];
+    /* Resume updating image sensor */
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_SYNC_CONFIG,
+                               SENSOR_SYNC_CONFIG_EXPS_SYNC);
 
-	temp = input * exposureMaxLL; // expand into 32 bit to avoid overflow
-	exposureCurLL = temp / 255; // integer division
-	FillBuff2B (exposureCurLL, buf);
-	I2CWrite (SENSOR_ADDR_WR, ROI1_T_INT_LL, 2, buf);
+    I2CSensorRead (SENSOR_ADDR_RD,
+            		SENSOR_REG_MULT_TIMER0,
+            		&regvalue
+            		);
+
+    I2CSensorRead (SENSOR_ADDR_RD,
+    		SENSOR_REG_FR_LENGTH0,
+    		&regvalue
+    		);
+
+    I2CSensorRead (SENSOR_ADDR_RD,
+        		SENSOR_REG_EXPOSURE0,
+        		&regvalue
+        		);
+
+    return apiRetStatus;
 }
 
 /*
-   Get the current gain setting from the EV76C541 sensor.
+   Get the current gain setting from the Python 480 sensor.
  */
-uint8_t
+CyU3PReturnStatus_t
 SensorGetGain (
-        void)
+        uint8_t *translated_gain)
 {
-    uint8_t buf[1];
+    CyU3PReturnStatus_t apiRetStatus;
+    uint16_t sensor_gain = 0;
 
-    I2CRead (SENSOR_ADDR_RD, ROI1_GAIN, 1, buf); // Only read first byte
-    return (uint8_t) buf[0];
+    apiRetStatus = I2CSensorRead (SENSOR_ADDR_RD,
+                                  SENSOR_REG_ANALOG_GAIN,
+                                  &sensor_gain);
+    if (apiRetStatus == CY_U3P_SUCCESS) {
+        switch (sensor_gain) {
+        case SENSOR_ANALOG_GAIN_1X:
+            *translated_gain = SENSOR_A_GAIN_TRANSL_1X;
+            break;
+        case SENSOR_ANALOG_GAIN_2X:
+            *translated_gain = SENSOR_A_GAIN_TRANSL_2X;
+            break;
+        case SENSOR_ANALOG_GAIN_3_5X:
+            *translated_gain = SENSOR_A_GAIN_TRANSL_3_5X;
+            break;
+        default:
+            *translated_gain = 0;
+            break;
+        }
+    }
+    return apiRetStatus;
 }
 
 /*
-   Update the gain setting for the EV76C541 sensor.
+   Update the gain setting for the Python 480 sensor.
  */
-void
+CyU3PReturnStatus_t
 SensorSetGain (
-        uint8_t input)
+        uint8_t new_translated_gain)
 {
-    I2CWrite (SENSOR_ADDR_WR, ROI1_GAIN, 1, &input); // Write register, leaving digital gain alone
-}
+  uint16_t new_sensor_gain;
+    CyU3PReturnStatus_t apiRetStatus;
 
-// Read compression knee point
-uint8_t
-SensorGetCompression(
-		void
-)
-{
-	uint8_t buf[2];
-	I2CRead (SENSOR_ADDR_RD, REG_MISCEL1, 2, buf); // Read current max offset and compression
-	return buf[1]; // knee is the second byte
-}
-
-// Update compression knee, must only be changed in standby mode
-void
-SensorSetCompression(
-		uint8_t input)
-{
-	uint8_t buf[2];
-	I2CRead (SENSOR_ADDR_RD, REG_MISCEL1, 1, buf); // Read current max offset into first byte
-	buf[1] = input; // set second byte to new knee point
-	I2CWrite (SENSOR_ADDR_WR, REG_MISCEL1, 2, buf); // Write old max offset and input compression
+    switch (new_translated_gain) {
+            case SENSOR_A_GAIN_TRANSL_1X:
+              new_sensor_gain = SENSOR_ANALOG_GAIN_1X;
+                break;
+            case SENSOR_A_GAIN_TRANSL_3_5X:
+              new_sensor_gain = SENSOR_ANALOG_GAIN_3_5X;
+                break;
+            case SENSOR_A_GAIN_TRANSL_2X:
+                // Fall-through
+            default:
+              new_sensor_gain = SENSOR_ANALOG_GAIN_2X;
+                break;
+            }
+    apiRetStatus = I2CSensorWrite (SENSOR_ADDR_WR,
+                                   SENSOR_REG_ANALOG_GAIN,
+                                   new_sensor_gain);
+    return apiRetStatus;
 }

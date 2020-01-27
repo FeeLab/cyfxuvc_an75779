@@ -40,123 +40,95 @@
 /* GPIO 20 on FX3 is used as SYNC output -- high during FV */
 #define SENSOR_SYNC_GPIO 20
 
+#define SENSOR_REG_CHIP_ID             0
+#define SENSOR_REG_SOFT_RESET_ANALOG  10
+#define SENSOR_REG_SEQ_GEN_CONFIG    192
+#define SENSOR_REG_MULT_TIMER0       199
+#define SENSOR_REG_FR_LENGTH0        200
+#define SENSOR_REG_EXPOSURE0         201
+#define SENSOR_REG_ANALOG_GAIN       204
+#define SENSOR_REG_SYNC_CONFIG       206
+#define SENSOR_REG_ROI0_X_CONFIG     256
+#define SENSOR_REG_ROI0_Y_CONFIG     257
+#define SENSOR_REG_ROI_CONFIG_LSB0   264
+#define SENSOR_REG_ROI_CONFIG_LSB1   265
+
+#define SENSOR_A_GAIN_TRANSL_1X   1
+#define SENSOR_A_GAIN_TRANSL_2X   2
+#define SENSOR_A_GAIN_TRANSL_3_5X 3
+
 /* Communication over saturation channel */
-#define SATURATION_RECORD_START	0x01
-#define SATURATION_RECORD_END	0x02
-#define SATURATION_INIT 		0x03
-#define SATURATION_FPS5			0x11
-#define SATURATION_FPS10		0x12
-#define	SATURATION_FPS15		0x13
-#define	SATURATION_FPS20		0x14
-#define SATURATION_FPS30		0x15
-#define	SATURATION_FPS60		0x16
+#define SATURATION_RECORD_START 0x01
+#define SATURATION_RECORD_END 0x02
+#define SATURATION_INIT     0x03
+#define SATURATION_FPS5     0x11
+#define SATURATION_FPS10    0x12
+#define SATURATION_FPS15    0x13
+#define SATURATION_FPS20    0x14
+#define SATURATION_FPS30    0x15
+#define SATURATION_FPS60    0x16
 
-/* Function    : SensorInit
-   Description : Initialize the EV76C541 sensor.
-   Parameters  : None
- */
-extern void
+extern CyU3PReturnStatus_t
+SensorConfigureRoi1(
+                      void);
+
+extern CyU3PReturnStatus_t
 SensorInit (
-        void);
+            void);
 
-extern void
+extern CyU3PReturnStatus_t
 SensorStart (
-		void);
+    void);
 
-extern void
+extern CyU3PReturnStatus_t
 SensorStop (
-		void);
+    void);
 
-/* Function    : SensorReset
-   Description : Reset the EV76C541 image sensor using FX3 GPIO.
+/* Function    : SensorIsOn
+   Description : Check to see if the sensor is on
    Parameters  : None
- */
-extern void
-SensorReset (
+*/
+extern CyU3PReturnStatus_t
+SensorIsOn (
+            CyBool_t *isOn);
+
+extern CyU3PReturnStatus_t
+SensorDisable (
         void);
 
 /* Function     : SensorScaling_HD720p_30fps
    Description  : Configure the EV76C541 sensor for 720p 30 fps video stream.
    Parameters   : None
  */
-extern void
-SensorScaling_752_480_30fps (
+extern CyU3PReturnStatus_t
+SensorScaling_808_608_30fps (
         void);
 
-/* Function     : SensorGetFeedback
-   Description  : Read feedback register on EV76C541 sensor
-   Parameters   : None
- */
-extern uint16_t
-SensorGetFeedback (
-		void);
-
-/* Function    : SensorI2cBusTest
+/* Function    : SensorI2CBusTest
    Description : Test whether the EV76C541 sensor is connected on the I2C bus.
    Parameters  : None
  */
-extern uint8_t
-SensorI2cBusTest (
-        void);
-
-/* Function    : SensorGetBrightness
-   Description : Get the current brightness setting from the EV76C541 sensor.
-   Parameters  : None
- */
-extern uint8_t
-SensorGetBrightness (
-        void);
-
-/* Function    : SensorSetBrightness
-   Description : Set the desired brightness setting on the EV76C541 sensor.
-   Parameters  :
-                 brightness - Desired brightness level.
- */
-extern void
-SensorSetBrightness (
-        uint8_t input);
-
-/* TODO #2-4 Add gain control function definitions */
-/* Copy the SensorGetBrightness and SensorSetBrightness function definitions from above
- * and paste them below this comment.
- * Rename the functions to SensorGetGain and SensorSetGain respectively.
- */
+extern CyU3PReturnStatus_t
+SensorI2CBusTest (
+        CyBool_t *connected);
 
 /* Function    : SensorGetGain
    Description : Get the current gain setting from the EV76C541 sensor.
    Parameters  : None
  */
-extern uint8_t
+extern CyU3PReturnStatus_t
 SensorGetGain (
-        void);
+               uint8_t *translated_gain);
 
 /* Function    : SensorSetGain
    Description : Set the desired gain setting on the EV76C541 sensor.
    Parameters  :
                  gain - Desired gain level.
  */
-extern void
+extern CyU3PReturnStatus_t
 SensorSetGain (
-        uint8_t input);
-
-/* Function    : SensorGetCompression
-   Description : Get the current compression knee point from the EV76C541 sensor.
-   Parameters  : None
- */
-extern uint8_t
-SensorGetCompression (
-        void);
-
-/* Function    : SensorSetCompression
-   Description : Set the desired compression knee on the EV76C541 sensor.
-   Parameters  :
-                 knee - Desired knee point between 0x00 and 0x92.
- */
-extern void
-SensorSetCompression (
-        uint8_t input);
+        uint8_t new_translated_gain);
 
 #endif /* _INCLUDED_SENSOR_H_ */
 
 /*[]*/
-

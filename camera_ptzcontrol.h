@@ -35,15 +35,15 @@
 #define wObjectiveFocalLengthMin                (uint16_t)(1)       /* Minimum Lobjective value for the sensor lens. */
 #define wObjectiveFocalLengthMax                (uint16_t)(10)      /* Maximum Lobjective value for the sensor lens. */
 #define wOcularFocalLength                      (uint16_t)(1)       /* Locular value for the sensor lens. */
-#define ZOOM_DEFAULT				            (uint16_t)(5)       /* Default zoom setting that we start with. */
+#define ZOOM_DEFAULT                    (uint16_t)(5)       /* Default zoom setting that we start with. */
 
 #define CyFxUvcAppGetMinimumZoom()              (wObjectiveFocalLengthMin)      /* Minimum supported zoom value. */
 #define CyFxUvcAppGetMaximumZoom()              (wObjectiveFocalLengthMax)      /* Maximum supported zoom value. */
 #define CyFxUvcAppGetZoomResolution()           ((uint16_t)1)                   /* Zoom resolution is one unit. */
 #define CyFxUvcAppGetDefaultZoom()              ((uint16_t)ZOOM_DEFAULT)        /* Default zoom setting. */
 
-#define PANTILT_MIN				                (int32_t)(-648000)  /* Minimum value for Pan and Tilt controls. */
-#define PANTILT_MAX				                (int32_t)(648000)   /* Maximum value for Pan and Tilt controls. */
+#define PANTILT_MIN                       (int32_t)(-648000)  /* Minimum value for Pan and Tilt controls. */
+#define PANTILT_MAX                       (int32_t)(648000)   /* Maximum value for Pan and Tilt controls. */
 
 #define CyFxUvcAppGetMinimumPan()               (PANTILT_MIN)       /* Minimum pan value. */
 #define CyFxUvcAppGetMaximumPan()               (PANTILT_MAX)       /* Maximum pan value. */
@@ -118,4 +118,3 @@ CyFxUvcAppModifyZoom (
 #endif
 
 #endif /* _INCLUDED_CAMERA_PTZCONTROL_H_ */
-

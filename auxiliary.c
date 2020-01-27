@@ -9,70 +9,80 @@
 #include "appi2c.h"
 #include "util.h"
 #include <cyu3types.h>
+#include <cyu3error.h>
 
-#define REG_LED_BRIGHTNESS 0x00
-#define REG_ADC_CTRL	   0x01
-#define REG_ADC_PERIOD	   0x02
+#define REG_ADC_CTRL    0x01
+#define REG_ADC_PERIOD  0x02
 
-
-
-/*
-   Get the current LED brightness.
- */
-uint8_t
-LedGetBrightness (
-        void)
+CyU3PReturnStatus_t
+SensorConfigurePython480 (
+    CyBool_t config_req,
+    CyBool_t power_req) //SPI configuration of sensor
 {
-    uint8_t brightness;
-    I2CRead(AUX_ADDR_RD, REG_LED_BRIGHTNESS, 1, &brightness);
-    return brightness;
+    CyU3PReturnStatus_t apiRetStatus;
+    uint8_t ctrl_val = 0x00;
+    if (config_req) {
+        ctrl_val |= SENSOR_CTRL_CONFIGURE_bm;
+    }
+    if (power_req) {
+        ctrl_val |= SENSOR_CTRL_POWER_bm;
+    }
+    apiRetStatus = I2CWrite (AUX_ADDR_WR, REG_SENSOR_CTRL, 1, &ctrl_val);
+    return apiRetStatus;
 }
 
-/*
-   Set the current LED brightness.
- */
-void
-LedSetBrightness (
-        uint8_t brightness)
+CyU3PReturnStatus_t
+SensorReadCtrlReg (
+                   uint8_t *status
+)
 {
-	I2CWrite (AUX_ADDR_WR, REG_LED_BRIGHTNESS, 1, &brightness);
+    CyU3PReturnStatus_t apiRetStatus;
+    apiRetStatus = I2CRead (AUX_ADDR_WR, REG_SENSOR_CTRL, 1, status);
+    return apiRetStatus;
 }
 
 /*
    Start taking and transmitting ADC reads
  */
-void
+CyU3PReturnStatus_t
 ScopeAdcStart (
-		CyBool_t multiplex_req,
-		uint16_t adc_per)
+    CyBool_t multiplex_req,
+    uint16_t adc_per)
 {
-	uint8_t buf[2];
-	uint8_t ctrl_val;
-	FillBuff2B (adc_per, buf);
-	I2CWrite2B (AUX_ADDR_WR, REG_ADC_PERIOD, buf[0], buf[1]);
-	ctrl_val = multiplex_req ? 0x03 : 0x01;
-	I2CWrite (AUX_ADDR_WR, REG_ADC_CTRL, 1, &ctrl_val);
+    CyU3PReturnStatus_t apiRetStatus;
+    uint8_t buf[2];
+    FillBuff2B (adc_per, buf);
+    apiRetStatus = I2CWrite2B (AUX_ADDR_WR, REG_ADC_PERIOD, buf[0], buf[1]);
+    buf[0] = multiplex_req ? 0x03 : 0x01;
+    if (apiRetStatus == CY_U3P_SUCCESS) {
+        apiRetStatus = I2CWrite (AUX_ADDR_WR, REG_ADC_CTRL, 1, buf);
+    }
+    return apiRetStatus;
 }
 
 /*
    Get current ADC period on scope
  */
-uint16_t
+CyU3PReturnStatus_t
 ScopeGetAdcPeriod (
-		void)
+    uint16_t *period)
 {
-	uint8_t buf[2];
-	I2CRead2B (AUX_ADDR_RD, REG_ADC_PERIOD, buf);
-	return Combine2B(buf);
+    CyU3PReturnStatus_t apiRetStatus;
+    uint8_t buf[2];
+    apiRetStatus = I2CRead2B (AUX_ADDR_RD, REG_ADC_PERIOD, buf);
+    *period = Combine2B (buf);
+    return apiRetStatus;
 }
 
 /*
    Stop taking and transmitting ADC reads
  */
-void
+CyU3PReturnStatus_t
 ScopeAdcStop (
         void)
 {
-	uint8_t ctrl_val = 0x00;
-	I2CWrite (AUX_ADDR_WR, REG_ADC_CTRL, 1, &ctrl_val);
+    CyU3PReturnStatus_t apiRetStatus;
+    uint8_t ctrl_val = 0x00;
+    apiRetStatus = I2CWrite (AUX_ADDR_WR, REG_ADC_CTRL, 1, &ctrl_val);
+    return apiRetStatus;
 }

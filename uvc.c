@@ -67,6 +67,7 @@
 #include <cyu3socket.h>
 
 #include "uvc.h"
+#include "util.h"
 #include "appi2c.h"
 #include "app_error_handler.h"
 #include "sensor.h"
@@ -148,8 +149,8 @@ uint8_t glProbeCtrl[CY_FX_UVC_MAX_PROBE_SETTING] = {
     0x00, 0x00,                 /* Window size for average bit rate: only applicable to video
                                    streaming with adjustable compression parameters */
     0x00, 0x00,                 /* Internal video streaming i/f latency in ms */
-    0x00, 0x04, 0x0B, 0x00,     /* Max video frame size in bytes; Changed by GL */
-    0x00, 0xC0, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB, 0x9000 for 36KB, changed by JRS */
+    PYTHON480_FRAMESIZE_BYTES,     /* Max video frame size in bytes; Changed by GL */
+    0x00, 0x90, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB */
 
 #ifndef FX3_UVC_1_0_SUPPORT
     /* UVC 1.1 Probe Control has additional fields from UVC 1.0 */
@@ -176,8 +177,8 @@ uint8_t glProbeCtrl20[CY_FX_UVC_MAX_PROBE_SETTING] = {
     0x00, 0x00,                 /* Window size for average bit rate: only applicable to video
                                    streaming with adjustable compression parameters */
     0x00, 0x00,                 /* Internal video streaming i/f latency in ms */
-    0x00, 0x04, 0x0B, 0x00,     /* Max video frame size in bytes */
-    0x00, 0xC0, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB */
+    PYTHON480_FRAMESIZE_BYTES,     /* Max video frame size in bytes */
+    0x00, 0x90, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB */
 
 #ifndef FX3_UVC_1_0_SUPPORT
     /* UVC 1.1 Probe Control has additional fields from UVC 1.0 */
@@ -224,39 +225,39 @@ volatile static uint32_t glDmaDone = 1;                 /* Number of buffers tra
 /* Function to handle 'back-channel' communication through saturation control */
 static void
 handleSaturationCommunication (
-		uint8_t  value)
+    uint8_t  value)
 {
-	switch(value) {
-		case SATURATION_RECORD_START:
-			SensorStart ();
-			break;
-		case SATURATION_RECORD_END:
-			SensorStop ();
-			break;
-		case SATURATION_INIT:
-			SensorInit ();
-			break;
-		case SATURATION_FPS5:
-			// Nothing
-			break;
-		case SATURATION_FPS10:
-			// Nothing
-			break;
-		case SATURATION_FPS15:
-			// Nothing
-			break;
-		case SATURATION_FPS20:
-			// Nothing
-			break;
-		case SATURATION_FPS30:
-			SensorScaling_752_480_30fps ();
-			break;
-		case SATURATION_FPS60:
-			// Nothing
-			break;
-		default:
-			break;
-	}
+  switch(value) {
+    case SATURATION_RECORD_START:
+      SensorStart ();
+      break;
+    case SATURATION_RECORD_END:
+      SensorStop ();
+      break;
+    case SATURATION_INIT:
+      SensorInit ();
+      break;
+    case SATURATION_FPS5:
+      // Nothing
+      break;
+    case SATURATION_FPS10:
+      // Nothing
+      break;
+    case SATURATION_FPS15:
+      // Nothing
+      break;
+    case SATURATION_FPS20:
+      // Nothing
+      break;
+    case SATURATION_FPS30:
+      SensorScaling_808_608_30fps ();
+      break;
+    case SATURATION_FPS60:
+      // Nothing
+      break;
+    default:
+      break;
+  }
 }
 
 
@@ -700,7 +701,6 @@ CyFxUVCApplnInit (void)
     CyU3PEpConfig_t              endPointConfig;
     CyU3PReturnStatus_t          apiRetStatus;
     CyU3PPibClock_t              pibclock;
-
 #ifdef USB_DEBUG_INTERFACE
     CyU3PDmaChannelConfig_t channelConfig;
 #endif
@@ -744,12 +744,14 @@ CyFxUVCApplnInit (void)
 
     /* Image sensor initialization. Reset and then initialize with appropriate configuration. */
     SensorConfigureSerdes ();
-    SensorReset ();
-    SensorInit ();
-    SensorGetFeedback ();
-    LedSetBrightness (0x00);
-    ScopeAdcStart(CyTrue, AUX_ADC_MIN_PER);
-
+    apiRetStatus = SensorDisable ();
+    if (apiRetStatus == CY_U3P_SUCCESS) {
+        apiRetStatus = SensorInit ();
+    }
+    if (apiRetStatus != CY_U3P_SUCCESS) {
+        CyU3PDebugPrint (4, "I2C initialization of sensor failed, Error Code = %d\n", apiRetStatus);
+        CyFxAppErrorHandler (apiRetStatus);
+    }
     /* USB initialization. */
     apiRetStatus = CyU3PUsbStart ();
     if (apiRetStatus != CY_U3P_SUCCESS)
@@ -1062,7 +1064,7 @@ UVCAppThread_Entry (
     /*
        The actual data forwarding from sensor to USB host is done from the DMA and GPIF callback
        functions. The thread is only responsible for checking for streaming start/stop conditions.
-      
+
        The CY_FX_UVC_STREAM_EVENT event flag will indicate that the UVC video stream should be started.
 
        The CY_FX_UVC_STREAM_ABORT_EVENT event indicates that we need to abort the video streaming. This
@@ -1175,148 +1177,111 @@ UVCHandleProcessingUnitRqts (
         void)
 {
     CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
-    uint16_t readCount, brightnessVal;
+    uint16_t readCount;
+
+    /* Discovery seems to be 134->130->131->132->135
+     * 0x86 -> 0x82 -> 0x83 -> 0x84 -> 0x87
+     * get info -> get min -> get max -> get def
+     *
+     * When setting brightness, get 129 -> 129 -> 1
+     * This is 0x81 -> 0x81 -> 0x01
+     * or get cur -> get cur -> set cur
+     */
 
     switch (wValue)
     {
-        case CY_FX_UVC_PU_BRIGHTNESS_CONTROL:
-            switch (bRequest)
-            {
-                case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of brightness data = 2 byte. */
-                    glEp0Buffer[0] = 2;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_CUR_REQ: /* Current brightness value. */
-                    glEp0Buffer[0] = SensorGetBrightness ();
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum brightness = 0. */
-                    glEp0Buffer[0] = 0;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum brightness = 255. */
-                    glEp0Buffer[0] = 255;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
-                    glEp0Buffer[0] = 1;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
-                    glEp0Buffer[0] = 3;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_GET_DEF_REQ: /* Default brightness value = 55. */
-                    glEp0Buffer[0] = 55;
-                    CyU3PUsbSendEP0Data (2, (uint8_t *)glEp0Buffer);
-                    break;
-                case CY_FX_USB_UVC_SET_CUR_REQ: /* Update brightness value. */
-                    apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
-                            glEp0Buffer, &readCount);
-                    if (apiRetStatus == CY_U3P_SUCCESS)
-                    {
-                        brightnessVal = CY_U3P_MAKEWORD(glEp0Buffer[1], glEp0Buffer[0]);
-                        /* Update the brightness value only if the value is within the range */
-                        if(brightnessVal >= 0 && brightnessVal <= 255)
-                        {
-                            SensorSetBrightness (glEp0Buffer[0]);
-                        }
-                    }
-                    break;
-                default:
-                    glUvcVcErrorCode = CY_FX_UVC_VC_ERROR_CODE_INVALID_REQUEST;
-                    CyU3PUsbStall (0, CyTrue, CyFalse);
-                    break;
-            }
+    case CY_FX_UVC_PU_GAIN_CONTROL: // 1024
+      switch (bRequest)
+      {
+        case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of gain data = 1 byte. */
+            glEp0Buffer[0] = 1;
+            CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
             break;
-		case CY_FX_UVC_PU_GAIN_CONTROL:
-			switch (bRequest)
-			{
-				case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of gain data = 1 byte. */
-						glEp0Buffer[0] = 1;
-						CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-						break;
-				case CY_FX_USB_UVC_GET_CUR_REQ: /* Current gain value. */
-					glEp0Buffer[0] = SensorGetGain ();
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum gain = 0. */
-					glEp0Buffer[0] = 0;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum gain = 255. */
-					glEp0Buffer[0] = 7;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
-					glEp0Buffer[0] = 1;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
-					glEp0Buffer[0] = 3;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_GET_DEF_REQ: /* Default gain value = 0. */
-					glEp0Buffer[0] = 0;
-					CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-					break;
-				case CY_FX_USB_UVC_SET_CUR_REQ: /* Update gain value. */
-					apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
-							glEp0Buffer, &readCount);
-					if (apiRetStatus == CY_U3P_SUCCESS)
-					{
-						SensorSetGain (glEp0Buffer[0]);
-					}
-					break;
-				default:
-					CyU3PUsbStall (0, CyTrue, CyFalse);
-					break;
-			}
-			break;
+        case CY_FX_USB_UVC_GET_CUR_REQ: /* Current gain value. */
+          apiRetStatus = SensorGetGain (glEp0Buffer);
+          if (apiRetStatus != CY_U3P_SUCCESS) {
+            glEp0Buffer[0] = 1;
+          }
+          CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+          break;
+        case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum gain = 1. */
+          glEp0Buffer[0] = 1;
+          CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+          break;
+        case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum gain = 3. */
+          glEp0Buffer[0] = 3;
+          CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+          break;
+        case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
+          glEp0Buffer[0] = 1;
+          CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+          break;
+        case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
+          glEp0Buffer[0] = 3;
+          CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+          break;
+        case CY_FX_USB_UVC_GET_DEF_REQ: /* Default gain value = 0. */
+          glEp0Buffer[0] = 0;
+          CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+          break;
+        case CY_FX_USB_UVC_SET_CUR_REQ: /* Update gain value. */
+          apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
+              glEp0Buffer, &readCount);
+          if (apiRetStatus == CY_U3P_SUCCESS)
+          {
+            apiRetStatus = SensorSetGain (glEp0Buffer[0]);
+          }
+          break;
+        default:
+          CyU3PUsbStall (0, CyTrue, CyFalse);
+          break;
+      }
+      break;
+      // 1792
     case CY_FX_UVC_PU_SATURATION_CONTROL: //Added by Daniel 6_24_2015. Used for general communication between DAQ software and PCB
-			switch (bRequest)
-			{
-			case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of saturation data = 1 byte. */
-				glEp0Buffer[0] = 1;
-				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-				break;
-			case CY_FX_USB_UVC_GET_CUR_REQ: /* Get GPIO values. Not implemented in feescope. Added by Daniel 10_30_2015*/
-				glEp0Buffer[0] = 0x15; // Not implemented
-				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-				break;
-			case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum saturation = 0x15. */
-				glEp0Buffer[0] = 0x15;
-				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-				break;
-			case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum saturation = 0x15. */
-				glEp0Buffer[0] = 0x15;
-				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-				break;
-			case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
-				glEp0Buffer[0] = 1;
-				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-				break;
-			case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
-				glEp0Buffer[0] = 3;
-				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-				break;
-			case CY_FX_USB_UVC_GET_DEF_REQ: /* Default saturation = 0x15. */
-				glEp0Buffer[0] = 0x15;
-				CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
-				break;
-			case CY_FX_USB_UVC_SET_CUR_REQ: /* Update communication value. */
-				apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
-						glEp0Buffer, &readCount);
-				if (apiRetStatus == CY_U3P_SUCCESS)
-				{
-					handleSaturationCommunication (glEp0Buffer[0]);
-				}
-				break;
-			default:
-				CyU3PUsbStall (0, CyTrue, CyFalse);
-				break;
-			}
-			break;
+      switch (bRequest)
+      {
+      case CY_FX_USB_UVC_GET_LEN_REQ: /* Length of saturation data = 1 byte. */
+        glEp0Buffer[0] = 1;
+        CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+        break;
+      case CY_FX_USB_UVC_GET_CUR_REQ: /* Get GPIO values. Not implemented in feescope. Added by Daniel 10_30_2015*/
+        glEp0Buffer[0] = 0x15; // Not implemented
+        CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+        break;
+      case CY_FX_USB_UVC_GET_MIN_REQ: /* Minimum saturation = 0x15. */
+        glEp0Buffer[0] = 0x15;
+        CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+        break;
+      case CY_FX_USB_UVC_GET_MAX_REQ: /* Maximum saturation = 0x15. */
+        glEp0Buffer[0] = 0x15;
+        CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+        break;
+      case CY_FX_USB_UVC_GET_RES_REQ: /* Resolution = 1. */
+        glEp0Buffer[0] = 1;
+        CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+        break;
+      case CY_FX_USB_UVC_GET_INFO_REQ: /* Both GET and SET requests are supported, auto modes not supported */
+        glEp0Buffer[0] = 3;
+        CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+        break;
+      case CY_FX_USB_UVC_GET_DEF_REQ: /* Default saturation = 0x15. */
+        glEp0Buffer[0] = 0x15;
+        CyU3PUsbSendEP0Data (1, (uint8_t *)glEp0Buffer);
+        break;
+      case CY_FX_USB_UVC_SET_CUR_REQ: /* Update communication value. */
+        apiRetStatus = CyU3PUsbGetEP0Data (CY_FX_UVC_MAX_PROBE_SETTING_ALIGNED,
+            glEp0Buffer, &readCount);
+        if (apiRetStatus == CY_U3P_SUCCESS)
+        {
+          handleSaturationCommunication (glEp0Buffer[0]);
+        }
+        break;
+      default:
+        CyU3PUsbStall (0, CyTrue, CyFalse);
+        break;
+      }
+      break;
         default:
             /*
              * Only the brightness control is supported as of now. Add additional code here to support
@@ -1669,7 +1634,7 @@ UVCHandleVideoStreamingRqts (
                     {
                         if (usbSpeed == CY_U3P_SUPER_SPEED)
                         {
-                            SensorScaling_752_480_30fps ();
+                            SensorScaling_808_608_30fps ();
 #ifdef FRAME_TIMER_ENABLE
                             /* We are using frame timer value of 200ms as the frame time is 33ms.
                              * Having more margin so that DMA reset doen't happen every now and then */
@@ -1678,8 +1643,8 @@ UVCHandleVideoStreamingRqts (
                         }
                         else
                         {
-                        	// FIXME: should the image be different over USB2.0?
-                        	SensorScaling_752_480_30fps ();
+                          // FIXME: should the image be different over USB2.0?
+                          SensorScaling_808_608_30fps ();
 #ifdef FRAME_TIMER_ENABLE
                             /* We are using frame timer value of 400ms as the frame time is 66ms.
                              * Having more margin so that DMA reset doen't happen every now and then */
@@ -1795,7 +1760,7 @@ UVCAppEP0Thread_Entry (
                     if (dmaInfo.count == 3)
                     {
                         glDebugRspBuffer[0] = SensorRead2B (SENSOR_ADDR_RD, dmaInfo.buffer[1], dmaInfo.buffer[2],
-                        		(glDebugRspBuffer+1));
+                            (glDebugRspBuffer+1));
                         dmaInfo.count = 3;
                     }
                     else if (dmaInfo.count == 4)
@@ -1803,7 +1768,7 @@ UVCAppEP0Thread_Entry (
                         if (dmaInfo.buffer[3] > 0)
                         {
                                 glDebugRspBuffer[0] = SensorRead (SENSOR_ADDR_RD, dmaInfo.buffer[1], dmaInfo.buffer[2],
-                                		(dmaInfo.buffer[3]*2), (glDebugRspBuffer+1));
+                                    (dmaInfo.buffer[3]*2), (glDebugRspBuffer+1));
                         }
                         dmaInfo.count = dmaInfo.buffer[3]*2+1;
                     }
@@ -1815,13 +1780,13 @@ UVCAppEP0Thread_Entry (
                 else if (dmaInfo.buffer[0] == 1)
                 {
                         glDebugRspBuffer[0] = SensorWrite (SENSOR_ADDR_WR, dmaInfo.buffer[1], dmaInfo.buffer[2],
-                        		(dmaInfo.count-3), (dmaInfo.buffer+3));
+                            (dmaInfo.count-3), (dmaInfo.buffer+3));
                         if (glDebugRspBuffer[0] != CY_U3P_SUCCESS)
-                        	break;
+                          break;
                         glDebugRspBuffer[0] = SensorRead (SENSOR_ADDR_RD, dmaInfo.buffer[1], dmaInfo.buffer[2],
-                        		(dmaInfo.count-3), (glDebugRspBuffer+1));
+                            (dmaInfo.count-3), (glDebugRspBuffer+1));
                         if (glDebugRspBuffer[0] != CY_U3P_SUCCESS)
-                        	break;
+                          break;
                     dmaInfo.count -= 2;
                 }
                 /* Default case, prepare buffer for loop back command in response */
@@ -1943,8 +1908,8 @@ main (
 
     /* Configure the IO matrix for the device. */
     io_cfg.isDQ32Bit        = CyTrue;
-    io_cfg.s0Mode       	= CyFalse;
-    io_cfg.s1Mode	        = CyFalse;
+    io_cfg.s0Mode         = CyFalse;
+    io_cfg.s1Mode         = CyFalse;
     io_cfg.lppMode          = CY_U3P_IO_MATRIX_LPP_UART_ONLY;
     io_cfg.gpioSimpleEn[0]  = 0;
     io_cfg.gpioSimpleEn[1]  = 0;
@@ -1971,4 +1936,3 @@ handle_fatal_error:
     /* Cannot recover from this error. */
     while (1);
 }
-
