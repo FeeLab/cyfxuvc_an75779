@@ -14,6 +14,7 @@
 #define AUX_ADDR_WR		  0x98
 #define AUX_ADDR_RD		  0x99
 #define AUX_ADC_MIN_PER 0x0034
+
 /*
    Get the current LED brightness.
  */

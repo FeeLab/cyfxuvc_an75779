@@ -490,10 +490,10 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x04,                           /* Subtype : uncompressed format I/F */
         0x01,                           /* Format desciptor index (only one format is supported) */
         0x01,                           /* number of frame descriptor followed */
-        0x59,0x55,0x59,0x32,            /* GUID used to identify streaming-encoding format: YUY2  */
-        0x00,0x00,0x10,0x00,
-        0x80,0x00,0x00,0xAA,
-        0x00,0x38,0x9B,0x71,
+        0x7B,0xEB,0x36,0xE4,             /*MEDIASUBTYPE_RGB565 GUID: E436EB7B-524F-11CE-9F53-0020AF0BA770  */
+        0x4F,0x52,0xCE,0x11,
+        0x9F,0x53,0x00,0x20,
+        0xAF,0x0B,0xA7,0x70,
         0x10,                           /* Number of bits per pixel used to specify color in the decoded video frame.
                                            0 if not applicable: 16 bit per pixel */
         0x01,                           /* Optimum Frame Index for this stream: 1 */
@@ -837,10 +837,10 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x04,                           /* Subtype : uncompressed format I/F */
         0x01,                           /* Format desciptor index */
         0x01,                           /* Number of frame descriptor followed */
-        0x59,0x55,0x59,0x32,            /* GUID used to identify streaming-encoding format: YUY2  */
-        0x00,0x00,0x10,0x00,
-        0x80,0x00,0x00,0xAA,
-        0x00,0x38,0x9B,0x71,
+        0x7B,0xEB,0x36,0xE4,             /*MEDIASUBTYPE_RGB565 GUID: E436EB7B-524F-11CE-9F53-0020AF0BA770  */
+        0x4F,0x52,0xCE,0x11,
+        0x9F,0x53,0x00,0x20,
+        0xAF,0x0B,0xA7,0x70,
         0x10,                           /* Number of bits per pixel */
         0x01,                           /* Optimum Frame Index for this stream: 1 */
         0x2F,                           /* X dimension of the picture aspect ratio; Non-interlaced; Changed by GL*/

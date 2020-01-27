@@ -14,6 +14,8 @@
 #define REG_ADC_CTRL	   0x01
 #define REG_ADC_PERIOD	   0x02
 
+
+
 /*
    Get the current LED brightness.
  */
