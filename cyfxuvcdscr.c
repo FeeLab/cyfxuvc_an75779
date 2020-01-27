@@ -25,6 +25,10 @@
  * application.
  */
 
+/*
+ * These descriptors are little-endian!!!
+ */
+
 #include "uvc.h"
 #include "camera_ptzcontrol.h"
 
