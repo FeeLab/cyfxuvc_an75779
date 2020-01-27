@@ -387,9 +387,8 @@ const uint8_t CyFxUSBHSConfigDscr[] =
                                          * D18: Contrast, Auto
                                          * D19 – D23: Reserved. Set to zero.
                                          */
-        0x0F,0x02,0x00,                 /* bmControls field of processing unit:
+        0x0B,0x02,0x00,                 /* bmControls field of processing unit:
          	 	 	 	 	 	 	 	 * Brightness control supported: changes exposure
-         	 	 	 	 	 	 	 	 * Hue control supported: changes LED brightness
          	 	 	 	 	 	 	 	 * Saturation control supported: other commands to DAQ board
          	 	 	 	 	 	 	 	 * Gain control supported: analog gain to pixel readings
                          * Changed by GL
@@ -725,7 +724,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x01,                           /* Source ID : 1 : Connected to input terminal */
         0x00,0x40,                      /* Digital multiplier */
         0x03,                           /* Size of controls field for this terminal : 3 bytes */
-        0x0F,0x02,0x00,                 /* bmControls field of processing unit:
+        0x0B,0x02,0x00,                 /* bmControls field of processing unit:
 										 * Brightness control supported: changes exposure
 										 * Hue control supported: changes LED brightness
 										 * Saturation control supported: other commands to DAQ board
