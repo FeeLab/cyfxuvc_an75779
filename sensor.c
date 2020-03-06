@@ -110,7 +110,7 @@ SensorInit (
 
     apiRetStatus = SensorConfigurePython480 (CyTrue, CyTrue);
     if (apiRetStatus == CY_U3P_SUCCESS) {
-        CyU3PThreadSleep (150); // sleep for 111 ms
+        CyU3PThreadSleep (50); // sleep for 50 ms
         /* Update sensor configuration based on desired video stream parameters.
          * Using 808x608 at 30fps as default setting.
          */

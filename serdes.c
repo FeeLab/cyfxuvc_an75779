@@ -32,16 +32,19 @@
 #define DESER_BCC_WDT      0x20
 
 /* Serializer registers */
-#define SER_PWR_RESET    0x01
-#define SER_GENERAL_CFG    0x03
-#define SER_GPO_CONFIG     0x0D
-#define SER_BCC_WDT      0x1E
-#define SER_PLL_OVERWRITE  0x35
+#define SER_PWR_RESET     0x01
+#define SER_GENERAL_CFG   0x03
+#define SER_GPO_CONFIG    0x0D
+#define SER_SCL_HIGH      0x11
+#define SER_SCL_LOW       0x12
+#define SER_BCC_WDT       0x1E
+#define SER_PLL_OVERWRITE 0x35
 
 //sets the Bidirectional Control Channel
 //Watchdog Timeout value in units of 2ms. This
 //field should not be set to 0
 #define BCC_WDT_TIMEOUT    0x02
+#define SER_SCL_TIME_VAL   0x32
 
 void
 SensorConfigureSerdes (
@@ -70,6 +73,11 @@ SensorConfigureSerdes (
   // Configure watchdog timer for serializer
   buf[0] = BCC_WDT_TIMEOUT;
   I2CWrite (SER_ADDR_WR, SER_BCC_WDT, 1, buf);
+
+  // Configure I2C master scl period
+  buf[0] = SER_SCL_TIME_VAL;
+  I2CWrite (SER_ADDR_WR, SER_SCL_HIGH, 1, buf);
+  I2CWrite (SER_ADDR_WR, SER_SCL_LOW,  1, buf);
 
   // Configure I2C passthrough for imaging sensor
   buf[0] = SENSOR_ADDR_WR;
