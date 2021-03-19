@@ -1907,7 +1907,7 @@ main (
     apiRetStatus = CyU3PDeviceCacheControl (CyTrue, CyFalse, CyFalse);
 
     /* Configure the IO matrix for the device. */
-    io_cfg.isDQ32Bit        = CyTrue;
+    io_cfg.isDQ32Bit        = CyFalse;
     io_cfg.s0Mode         = CyFalse;
     io_cfg.s1Mode         = CyFalse;
     io_cfg.lppMode          = CY_U3P_IO_MATRIX_LPP_UART_ONLY;

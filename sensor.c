@@ -120,6 +120,9 @@ SensorInit (
             apiRetStatus = SensorScaling_808_608_30fps ();
             if (apiRetStatus == CY_U3P_SUCCESS) {
                 apiRetStatus = SensorSetGain (SENSOR_INITIAL_SETTING_ANALOG_GAIN);
+                if (apiRetStatus == CY_U3P_SUCCESS) {
+                    apiRetStatus = ScopeAdcStart (CyTrue, 0x0034);
+                }
             }
         }
     }

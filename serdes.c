@@ -53,10 +53,11 @@ SensorConfigureSerdes (
   uint8_t buf[1];
 
   /* Boost low frequency gain */
-  /*
+
+//  buf[0] = 0x00;
   buf[0] = 0xC0;
   I2CWrite (DESER_ADDR_WR, DESER_LF_GAIN, 1, buf);
-  */
+
 
   // Configure watchdog timer for deserializer
   buf[0] = BCC_WDT_TIMEOUT;
