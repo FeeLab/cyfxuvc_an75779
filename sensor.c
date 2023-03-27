@@ -58,14 +58,16 @@
 #define SENSOR_ANALOG_GAIN_3_5X        0x0024
 #define SENSOR_SYNC_CONFIG_EXPS_SYNC   0x037A
 #define SENSOR_SYNC_CONFIG_EXPS_NOSYNC 0x0372
-#define SENSOR_ROI_X_CONFIG_FULL       0xC900 // assumes granularity is 4
-#define SENSOR_ROI_Y_CONFIG_FULL       0x9700
+//#define SENSOR_ROI_X_CONFIG_FULL       0xC900 // assumes granularity is 4
+//#define SENSOR_ROI_Y_CONFIG_FULL       0x9700
+#define SENSOR_ROI_X_CONFIG_FULL       (136 << 8) | 65 // assumes granularity is 4
+#define SENSOR_ROI_Y_CONFIG_FULL       (111 << 8) | 40
 
-#define SENSOR_30FPS_MULT_TIMER          1000
+#define SENSOR_30FPS_MULT_TIMER          195
 
 #ifdef PLL_BYPASS
-#define SENSOR_30FPS_FR_LENGTH           547
-#define SENSOR_30FPS_MAX_EXPOSURE        546
+#define SENSOR_30FPS_FR_LENGTH           667
+#define SENSOR_30FPS_MAX_EXPOSURE        666 //546
 #else
 #define SENSOR_30FPS_FR_LENGTH          2214
 #define SENSOR_30FPS_MAX_EXPOSURE       2213
