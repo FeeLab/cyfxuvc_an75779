@@ -58,16 +58,29 @@
 #define SENSOR_ANALOG_GAIN_3_5X        0x0024
 #define SENSOR_SYNC_CONFIG_EXPS_SYNC   0x037A
 #define SENSOR_SYNC_CONFIG_EXPS_NOSYNC 0x0372
-//#define SENSOR_ROI_X_CONFIG_FULL       0xC900 // assumes granularity is 4
-//#define SENSOR_ROI_Y_CONFIG_FULL       0x9700
-#define SENSOR_ROI_X_CONFIG_FULL       (136 << 8) | 65 // assumes granularity is 4
-#define SENSOR_ROI_Y_CONFIG_FULL       (111 << 8) | 40
+#define SENSOR_SYNC_CONFIG_ROI_SYNC    0x037A
+#define SENSOR_SYNC_CONFIG_ROI_NOSYNC  0x037A & !(1 << 5)
+#define SENSOR_ROI0_X_CONFIG_FULL       (175 << 8) | 24 //0x9700 //0xC900 // assumes granularity is 4
+#define SENSOR_ROI0_Y_CONFIG_FULL       0x9700
+#define SENSOR_ROI1_X_CONFIG_FULL       (136 << 8) | 65 // assumes granularity is 4
+#define SENSOR_ROI1_Y_CONFIG_FULL       (111 << 8) | 40
 
-#define SENSOR_30FPS_MULT_TIMER          195
+#define SENSOR_120FPS_MULT_TIMER          195
 
 #ifdef PLL_BYPASS
-#define SENSOR_30FPS_FR_LENGTH           667
-#define SENSOR_30FPS_MAX_EXPOSURE        666 //546
+#define SENSOR_120FPS_FR_LENGTH           667
+#define SENSOR_120FPS_MAX_EXPOSURE        666 //546
+#else
+#define SENSOR_120FPS_FR_LENGTH          2214
+#define SENSOR_120FPS_MAX_EXPOSURE       2213
+#endif
+
+
+#define SENSOR_30FPS_MULT_TIMER          1000
+
+#ifdef PLL_BYPASS
+#define SENSOR_30FPS_FR_LENGTH           547
+#define SENSOR_30FPS_MAX_EXPOSURE        546
 #else
 #define SENSOR_30FPS_FR_LENGTH          2214
 #define SENSOR_30FPS_MAX_EXPOSURE       2213
@@ -119,13 +132,17 @@ SensorInit (
 
         apiRetStatus = SensorConfigureRoi1 ();
         if (apiRetStatus == CY_U3P_SUCCESS) {
-            apiRetStatus = SensorScaling_808_608_30fps ();
-            if (apiRetStatus == CY_U3P_SUCCESS) {
-                apiRetStatus = SensorSetGain (SENSOR_INITIAL_SETTING_ANALOG_GAIN);
-                if (apiRetStatus == CY_U3P_SUCCESS) {
-                    apiRetStatus = ScopeAdcStart (CyTrue, 0x0034);
-                }
-            }
+        	apiRetStatus = SensorConfigureRoi2 ();
+			if (apiRetStatus == CY_U3P_SUCCESS) {
+				//apiRetStatus = SensorScaling_808_608_30fps ();
+				//SensorSetRoi (0);
+				if (apiRetStatus == CY_U3P_SUCCESS) {
+					apiRetStatus = SensorSetGain (SENSOR_INITIAL_SETTING_ANALOG_GAIN);
+					if (apiRetStatus == CY_U3P_SUCCESS) {
+						apiRetStatus = ScopeAdcStart (CyTrue, 0x0034);
+					}
+				}
+			}
         }
     }
     return apiRetStatus;
@@ -197,11 +214,27 @@ SensorConfigureRoi1(
 
     apiRetStatus =  I2CSensorWrite (SENSOR_ADDR_WR,
                                     SENSOR_REG_ROI0_X_CONFIG,
-                                    SENSOR_ROI_X_CONFIG_FULL);
+                                    SENSOR_ROI0_X_CONFIG_FULL);
     I2CSensorConditionalWrite (&apiRetStatus,
                                SENSOR_ADDR_WR,
                                SENSOR_REG_ROI0_Y_CONFIG,
-                               SENSOR_ROI_Y_CONFIG_FULL);
+                               SENSOR_ROI0_Y_CONFIG_FULL);
+    return apiRetStatus;
+}
+
+CyU3PReturnStatus_t
+SensorConfigureRoi2(
+            void)
+{
+    CyU3PReturnStatus_t apiRetStatus;
+
+    apiRetStatus =  I2CSensorWrite (SENSOR_ADDR_WR,
+                                    SENSOR_REG_ROI1_X_CONFIG,
+                                    SENSOR_ROI1_X_CONFIG_FULL);
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_ROI1_Y_CONFIG,
+                               SENSOR_ROI1_Y_CONFIG_FULL);
     return apiRetStatus;
 }
 
@@ -210,7 +243,84 @@ SensorConfigureRoi1(
    refer to the EV76C541 sensor datasheet for details.
  */
 CyU3PReturnStatus_t
-SensorScaling_808_608_30fps (
+SensorScaling_288_288_120fps (
+        void)
+{
+    CyU3PReturnStatus_t apiRetStatus;
+    uint16_t regvalue;
+    I2CSensorRead (SENSOR_ADDR_RD,
+        		SENSOR_REG_MULT_TIMER0,
+        		&regvalue
+        		);
+
+    I2CSensorRead (SENSOR_ADDR_RD,
+    		SENSOR_REG_FR_LENGTH0,
+    		&regvalue
+    		);
+
+    I2CSensorRead (SENSOR_ADDR_RD,
+        		SENSOR_REG_EXPOSURE0,
+        		&regvalue
+        		);
+    /* Stop updating image sensor until all values are written */
+    apiRetStatus =  I2CSensorWrite (SENSOR_ADDR_WR,
+                                    SENSOR_REG_SYNC_CONFIG,
+                                    SENSOR_SYNC_CONFIG_EXPS_NOSYNC);
+
+    /*
+       Video configuration
+       Oscillator frequency is 66.66 MHz, period 15 ns
+       PLL is enabled at 4x osc frequency, 266.66 MHz and 4 ns
+       set mult_timer to 1000 to get period of 4 us for timing registers
+       The actual frame length and exposure length was calculated using the ON
+       semi exposure calculator
+    */
+
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_MULT_TIMER0,
+                               SENSOR_120FPS_MULT_TIMER);
+
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_FR_LENGTH0,
+                               SENSOR_120FPS_FR_LENGTH);
+
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_EXPOSURE0,
+                               SENSOR_120FPS_MAX_EXPOSURE);
+
+    /* Resume updating image sensor */
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_SYNC_CONFIG,
+                               SENSOR_SYNC_CONFIG_EXPS_SYNC);
+
+    I2CSensorRead (SENSOR_ADDR_RD,
+            		SENSOR_REG_MULT_TIMER0,
+            		&regvalue
+            		);
+
+    I2CSensorRead (SENSOR_ADDR_RD,
+    		SENSOR_REG_FR_LENGTH0,
+    		&regvalue
+    		);
+
+    I2CSensorRead (SENSOR_ADDR_RD,
+        		SENSOR_REG_EXPOSURE0,
+        		&regvalue
+        		);
+
+    return apiRetStatus;
+}
+
+/*
+   The procedure is adapted from Aptina's sensor initialization scripts. Please
+   refer to the EV76C541 sensor datasheet for details.
+ */
+CyU3PReturnStatus_t
+SensorScaling_608_608_30fps (
         void)
 {
     CyU3PReturnStatus_t apiRetStatus;
@@ -282,6 +392,7 @@ SensorScaling_808_608_30fps (
     return apiRetStatus;
 }
 
+
 /*
    Get the current gain setting from the Python 480 sensor.
  */
@@ -340,5 +451,70 @@ SensorSetGain (
     apiRetStatus = I2CSensorWrite (SENSOR_ADDR_WR,
                                    SENSOR_REG_ANALOG_GAIN,
                                    new_sensor_gain);
+    return apiRetStatus;
+}
+
+CyU3PReturnStatus_t
+SensorGetRoi (
+        uint8_t *translated_roi)
+{
+    CyU3PReturnStatus_t apiRetStatus;
+    uint16_t roi = 0;
+
+    apiRetStatus = I2CSensorRead (SENSOR_ADDR_RD,
+                                  SENSOR_REG_ROI_SELECTION,
+                                  &roi);
+    if (apiRetStatus == CY_U3P_SUCCESS) {
+        switch (roi) {
+        case SENSOR_ROI0: // 0b0001
+            *translated_roi = 0;
+            break;
+        case SENSOR_ROI1: // 0b0010
+            *translated_roi = 1;
+            break;
+        default:
+            *translated_roi = 0;
+            break;
+        }
+    }
+    return apiRetStatus;
+}
+
+/*
+   Update the gain setting for the Python 480 sensor.
+ */
+CyU3PReturnStatus_t
+SensorSetRoi (
+        uint8_t new_translated_roi)
+{
+  uint16_t new_roi;
+    CyU3PReturnStatus_t apiRetStatus;
+
+    switch (new_translated_roi) {
+            case 0:
+              new_roi = SENSOR_ROI0;
+                break;
+            case 1:
+              new_roi = SENSOR_ROI1;
+                break;
+            default:
+              new_roi = SENSOR_ROI0;
+                break;
+            }
+
+    /* Stop updating image sensor until all values are written */
+	apiRetStatus =  I2CSensorWrite (SENSOR_ADDR_WR,
+									SENSOR_REG_SYNC_CONFIG,
+									SENSOR_SYNC_CONFIG_ROI_NOSYNC);
+
+    apiRetStatus = I2CSensorWrite (SENSOR_ADDR_WR,
+                                   SENSOR_REG_ROI_SELECTION,
+                                   new_roi);
+
+    I2CSensorConditionalWrite (&apiRetStatus,
+                               SENSOR_ADDR_WR,
+                               SENSOR_REG_SYNC_CONFIG,
+                               SENSOR_SYNC_CONFIG_ROI_SYNC);
+
     return apiRetStatus;
 }

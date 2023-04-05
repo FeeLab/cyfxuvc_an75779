@@ -50,12 +50,18 @@
 #define SENSOR_REG_SYNC_CONFIG       206
 #define SENSOR_REG_ROI0_X_CONFIG     256
 #define SENSOR_REG_ROI0_Y_CONFIG     257
+#define SENSOR_REG_ROI1_X_CONFIG     258
+#define SENSOR_REG_ROI1_Y_CONFIG     259
 #define SENSOR_REG_ROI_CONFIG_LSB0   264
 #define SENSOR_REG_ROI_CONFIG_LSB1   265
+#define SENSOR_REG_ROI_SELECTION     195
 
 #define SENSOR_A_GAIN_TRANSL_1X   1
 #define SENSOR_A_GAIN_TRANSL_2X   2
 #define SENSOR_A_GAIN_TRANSL_3_5X 3
+
+#define SENSOR_ROI0 1
+#define SENSOR_ROI1 2
 
 /* Communication over saturation channel */
 #define SATURATION_RECORD_START 0x01
@@ -67,9 +73,15 @@
 #define SATURATION_FPS20    0x14
 #define SATURATION_FPS30    0x15
 #define SATURATION_FPS60    0x16
+#define SATURATION_ROI0     0x17
+#define SATURATION_ROI1     0x18
 
 extern CyU3PReturnStatus_t
 SensorConfigureRoi1(
+                      void);
+
+extern CyU3PReturnStatus_t
+SensorConfigureRoi2(
                       void);
 
 extern CyU3PReturnStatus_t
@@ -101,13 +113,29 @@ SensorDisable (
    Parameters   : None
  */
 extern CyU3PReturnStatus_t
-SensorScaling_808_608_30fps (
+SensorScaling_288_288_120fps (
         void);
 
 /* Function    : SensorI2CBusTest
    Description : Test whether the EV76C541 sensor is connected on the I2C bus.
    Parameters  : None
  */
+
+
+/* Function     : SensorScaling_HD720p_30fps
+   Description  : Configure the EV76C541 sensor for 720p 30 fps video stream.
+   Parameters   : None
+ */
+extern CyU3PReturnStatus_t
+SensorScaling_608_608_30fps (
+        void);
+
+/* Function    : SensorI2CBusTest
+   Description : Test whether the EV76C541 sensor is connected on the I2C bus.
+   Parameters  : None
+ */
+
+
 extern CyU3PReturnStatus_t
 SensorI2CBusTest (
         CyBool_t *connected);
@@ -127,6 +155,19 @@ SensorGetGain (
  */
 extern CyU3PReturnStatus_t
 SensorSetGain (
+        uint8_t new_translated_gain);
+
+extern CyU3PReturnStatus_t
+SensorGetRoi (
+               uint8_t *translated_gain);
+
+/* Function    : SensorSetGain
+   Description : Set the desired gain setting on the EV76C541 sensor.
+   Parameters  :
+                 gain - Desired gain level.
+ */
+extern CyU3PReturnStatus_t
+SensorSetRoi (
         uint8_t new_translated_gain);
 
 #endif /* _INCLUDED_SENSOR_H_ */

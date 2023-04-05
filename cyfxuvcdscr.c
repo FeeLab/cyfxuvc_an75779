@@ -515,20 +515,22 @@ const uint8_t CyFxUSBHSConfigDscr[] =
         0x00,                           /* Interlace Flags: Progressive scanning, no interlace */
         0x00,                           /* duplication of the video stream restriction: 0 - no restriction */
 
-       /* Class specific Uncompressed VS Frame descriptor */
-        0x1E,                           /* Descriptor size */
-        0x24,                           /* Descriptor type*/
-        0x05,                           /* Subtype: uncompressed frame I/F */
-        0x01,                           /* Frame Descriptor Index */
-        0x01,                           /* Still image capture method 1 supported, fixed frame rate */
-        PYTHON480_X_LENGTH,                     /* Width in pixel; Changed by GL */
-        PYTHON480_Y_LENGTH,                     /* Height in pixel; Changed by GL */
-        PYTHON480_BITRATE_30FPS,            /* Min bit rate bits/s. Not specified, taken from MJPEG; */
-        PYTHON480_BITRATE_30FPS,            /* Max bit rate bits/s. Not specified, taken from MJPEG; */
-        PYTHON480_FRAMESIZE_BYTES,      /* Maximum video or still frame size in bytes(Deprecated) */
-        INTERVAL_30FPS_100NS_MULTIPLE,  /* Default Frame Interval: 30 FPS, Changed by JRS */
-        0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-        INTERVAL_30FPS_100NS_MULTIPLE,         /* Shortest Frame Interval, Changed by JRS */
+
+        /* Class specific Uncompressed VS Frame descriptor: 288x288 120Hz */
+		0x1E,                           /* Descriptor size */
+		0x24,                           /* Descriptor type*/
+		0x05,                           /* Subtype: uncompressed frame I/F */
+		0x01,                           /* Frame Descriptor Index */
+		0x01,                           /* Still image capture method 1 supported, fixed frame rate */
+		PYTHON480_X_LENGTH_30FPS,                     /* Width in pixel; Changed by GL */
+		PYTHON480_Y_LENGTH_30FPS,                     /* Height in pixel; Changed by GL */
+		PYTHON480_BITRATE_30FPS,            /* Min bit rate bits/s. Not specified, taken from MJPEG; */
+		PYTHON480_BITRATE_30FPS,            /* Max bit rate bits/s. Not specified, taken from MJPEG; */
+		PYTHON480_FRAMESIZE_BYTES_30FPS,      /* Maximum video or still frame size in bytes(Deprecated) */
+		INTERVAL_30FPS_100NS_MULTIPLE,  /* Default Frame Interval: 30 FPS, Changed by JRS */
+		0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
+		INTERVAL_30FPS_100NS_MULTIPLE,         /* Shortest Frame Interval, Changed by JRS */
+
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */
@@ -615,16 +617,16 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         CY_U3P_USB_CONFIG_DESCR,        /* Configuration Descriptor Type */
 #ifdef USB_DEBUG_INTERFACE
 #ifdef FX3_UVC_1_0_SUPPORT
-        0xFC,0x00,                      /* Total length of this and all sub-descriptors. */
+        0x1A, 0x01, //0xFC,0x00,                      /* Total length of this and all sub-descriptors. */
 #else
-        0xFD,0x00,                      /* Total length of this and all sub-descriptors. */
+        0x1B, 0x01, //0xFD,0x00,                      /* Total length of this and all sub-descriptors. */
 #endif
         0x03,                           /* Number of interfaces */
 #else
 #ifdef FX3_UVC_1_0_SUPPORT
-        0xD9,0x00,                      /* Length of this descriptor and all sub descriptors */
+        0xF7, 0x00, //0xD9,0x00,                      /* Length of this descriptor and all sub descriptors */
 #else
-        0xDA,0x00,                      /* Length of this descriptor and all sub descriptors */
+        0xF8, 0x00, //0xDA,0x00,                      /* Length of this descriptor and all sub descriptors */
 #endif
         0x02,                           /* Number of interfaces */
 #endif
@@ -847,7 +849,7 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x24,                           /* Class-specific VS I/f Type */
         0x04,                           /* Subtype : uncompressed format I/F */
         0x01,                           /* Format desciptor index */
-        0x01,                           /* Number of frame descriptor followed */
+        0x02,                           /* Number of frame descriptor followed */
 
 #ifdef USE_YUY2_FORMAT
         /* GFL: changed pixel encoding back to YUY2 for debugging
@@ -866,20 +868,35 @@ const uint8_t CyFxUSBSSConfigDscr[] =
         0x00,                           /* Interlace Flags: Progressive scanning, no interlace */
         0x00,                           /* duplication of the video stream restriction: 0 - no restriction */
 
-        /* Class specific Uncompressed VS frame descriptor */
-        0x1E,                           /* Descriptor size */
-        0x24,                           /* Descriptor type*/
-        0x05,                           /* Subtype: uncompressed frame I/F */
-        0x01,                           /* Frame Descriptor Index */
-        0x01,                           /* Still image capture method 1 supported, fixed frame rate */
-        PYTHON480_X_LENGTH,                     /* Width in pixel; Changed by GL */
-        PYTHON480_Y_LENGTH,                     /* Height in pixel; Changed by GL */
-        PYTHON480_BITRATE_30FPS,            /* Min bit rate bits/s. Not specified, taken from MJPEG; */
-        PYTHON480_BITRATE_30FPS,            /* Max bit rate bits/s. Not specified, taken from MJPEG; */
-        PYTHON480_FRAMESIZE_BYTES,      /* Maximum video or still frame size in bytes(Deprecated) */
-        INTERVAL_30FPS_100NS_MULTIPLE,  /* Default Frame Interval: 30 FPS, Changed by JRS */
-        0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
-        INTERVAL_30FPS_100NS_MULTIPLE,         /* Shortest Frame Interval, Changed by JRS */
+        /* Class specific Uncompressed VS Frame descriptor: 288x288 120Hz */
+		 0x1E,                           /* Descriptor size */
+		 0x24,                           /* Descriptor type*/
+		 0x05,                           /* Subtype: uncompressed frame I/F */
+		 0x02,                           /* Frame Descriptor Index */
+		 0x01,                           /* Still image capture method 1 supported, fixed frame rate */
+		 PYTHON480_X_LENGTH_120FPS,                     /* Width in pixel; Changed by GL */
+		 PYTHON480_Y_LENGTH_120FPS,                     /* Height in pixel; Changed by GL */
+		 PYTHON480_BITRATE_120FPS,            /* Min bit rate bits/s. Not specified, taken from MJPEG; */
+		 PYTHON480_BITRATE_120FPS,            /* Max bit rate bits/s. Not specified, taken from MJPEG; */
+		 PYTHON480_FRAMESIZE_BYTES_120FPS,      /* Maximum video or still frame size in bytes(Deprecated) */
+		 INTERVAL_120FPS_100NS_MULTIPLE,  /* Default Frame Interval: 30 FPS, Changed by JRS */
+		 0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
+		 INTERVAL_120FPS_100NS_MULTIPLE,         /* Shortest Frame Interval, Changed by JRS */
+
+		 /* Class specific Uncompressed VS frame descriptor 608x608 30Hz*/
+		 0x1E,                           /* Descriptor size */
+		 0x24,                           /* Descriptor type*/
+		 0x05,                           /* Subtype: uncompressed frame I/F */
+		 0x01,                           /* Frame Descriptor Index */
+		 0x01,                           /* Still image capture method 1 supported, fixed frame rate */
+		 PYTHON480_X_LENGTH_30FPS,                     /* Width in pixel; Changed by GL */
+		 PYTHON480_Y_LENGTH_30FPS,                     /* Height in pixel; Changed by GL */
+		 PYTHON480_BITRATE_30FPS,            /* Min bit rate bits/s. Not specified, taken from MJPEG; */
+		 PYTHON480_BITRATE_30FPS,            /* Max bit rate bits/s. Not specified, taken from MJPEG; */
+		 PYTHON480_FRAMESIZE_BYTES_30FPS,      /* Maximum video or still frame size in bytes(Deprecated) */
+		 INTERVAL_30FPS_100NS_MULTIPLE,  /* Default Frame Interval: 30 FPS, Changed by JRS */
+		 0x01,                           /* Frame interval(Frame Rate) types: Only one frame interval supported */
+		 INTERVAL_30FPS_100NS_MULTIPLE,         /* Shortest Frame Interval, Changed by JRS */
 
         /* Endpoint Descriptor for BULK Streaming Video Data */
         0x07,                           /* Descriptor size */

@@ -149,7 +149,7 @@ uint8_t glProbeCtrl[CY_FX_UVC_MAX_PROBE_SETTING] = {
     0x00, 0x00,                 /* Window size for average bit rate: only applicable to video
                                    streaming with adjustable compression parameters */
     0x00, 0x00,                 /* Internal video streaming i/f latency in ms */
-    PYTHON480_FRAMESIZE_BYTES,     /* Max video frame size in bytes; Changed by GL */
+    PYTHON480_FRAMESIZE_BYTES_30FPS,     /* Max video frame size in bytes; Changed by GL*/
     0x00, 0x90, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB */
 
 #ifndef FX3_UVC_1_0_SUPPORT
@@ -177,7 +177,7 @@ uint8_t glProbeCtrl20[CY_FX_UVC_MAX_PROBE_SETTING] = {
     0x00, 0x00,                 /* Window size for average bit rate: only applicable to video
                                    streaming with adjustable compression parameters */
     0x00, 0x00,                 /* Internal video streaming i/f latency in ms */
-    PYTHON480_FRAMESIZE_BYTES,     /* Max video frame size in bytes */
+    PYTHON480_FRAMESIZE_BYTES_30FPS,     /* Max video frame size in bytes */
     0x00, 0x90, 0x00, 0x00,      /* No. of bytes device can rx in single payload = 16 KB */
 
 #ifndef FX3_UVC_1_0_SUPPORT
@@ -236,24 +236,6 @@ handleSaturationCommunication (
       break;
     case SATURATION_INIT:
       SensorInit ();
-      break;
-    case SATURATION_FPS5:
-      // Nothing
-      break;
-    case SATURATION_FPS10:
-      // Nothing
-      break;
-    case SATURATION_FPS15:
-      // Nothing
-      break;
-    case SATURATION_FPS20:
-      // Nothing
-      break;
-    case SATURATION_FPS30:
-      SensorScaling_808_608_30fps ();
-      break;
-    case SATURATION_FPS60:
-      // Nothing
       break;
     default:
       break;
@@ -1634,7 +1616,17 @@ UVCHandleVideoStreamingRqts (
                     {
                         if (usbSpeed == CY_U3P_SUPER_SPEED)
                         {
-                            SensorScaling_808_608_30fps ();
+
+                        	switch (glCommitCtrl[3]) {
+                        	case 2:
+                            	SensorScaling_288_288_120fps ();
+                        		SensorSetRoi(1);
+                        		break;
+                        	default:
+                        		SensorScaling_608_608_30fps ();
+                        		SensorSetRoi(0);
+                        	}
+
 #ifdef FRAME_TIMER_ENABLE
                             /* We are using frame timer value of 200ms as the frame time is 33ms.
                              * Having more margin so that DMA reset doen't happen every now and then */
@@ -1644,7 +1636,7 @@ UVCHandleVideoStreamingRqts (
                         else
                         {
                           // FIXME: should the image be different over USB2.0?
-                          SensorScaling_808_608_30fps ();
+                        	SensorScaling_608_608_30fps ();
 #ifdef FRAME_TIMER_ENABLE
                             /* We are using frame timer value of 400ms as the frame time is 66ms.
                              * Having more margin so that DMA reset doen't happen every now and then */
